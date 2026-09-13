@@ -149,11 +149,22 @@ The frontend will be available at `http://localhost:3000`
 - `POST /api/detect-cracks` - Advanced crack detection with confidence threshold
 - `POST /api/segment-damage` - Instance segmentation of damaged regions
 - `POST /api/classify-material` - Material type classification
+- `POST /api/crack-length` - Standalone crack length estimation (3rd branch)
 
 ### 3D Generation
 - `POST /api/generate-heightmap` - Create 3D heightmap (GLB format)
 - `POST /api/generate-stl` - Create 3D model (STL format)
 - `GET /api/heightmap-preview` - Get preview image of heightmap
+
+### Crack Length Estimation (3rd Branch)
+Standalone crack length estimation, independent from AI segmentation and 3D construction. Uses the AI model only for segmentation mask extraction, then measures physical crack length via skeletonization and graph analysis.
+
+- `POST /api/crack-length` - Estimate crack length from mask or image
+  - Input: binary mask image OR infrastructure image (auto-segmented)
+  - Skeletonization: `guo_hall` (falls back to `zhang_suen`)
+  - Measurements: network length, main path, MST per skeleton method
+  - Scale: provided `mm_per_px` or auto-calibrated (EXIF/DB/depth)
+  - Output: length in pixels and millimetres, per-method breakdown, topology
 
 ### Video Processing
 - `POST /api/process-video` - Analyze video file frame-by-frame
@@ -179,6 +190,31 @@ The frontend will be available at `http://localhost:3000`
 
 ```
 AI-Powered_Civil_Infrastructure/
+├── crack_quantification/             # Crack length estimation package (3rd branch)
+│   ├── length.py                   # Skeleton graph -> crack length (px)
+│   ├── skeleton.py                 # Binary mask -> 1-pixel skeleton
+│   ├── graph_analysis.py           # Network / main_path / MST measurements
+│   ├── quantify.py                 # Full pipeline (length+width+area+severity)
+│   ├── api_adapter.py              # Segmentation results -> length report
+│   ├── research_experiment.py      # Factorial evaluation runner
+│   ├── compare_methods.py          # Method comparison with visual outputs
+│   ├── compare_skeletons.py        # Skeletonization algorithm benchmark
+│   ├── camera_scale.py             # Camera-scale recovery
+│   ├── autocalibrate.py            # Fully automatic EXIF+DB+depth calibration
+│   ├── scale_recovery.py           # 4 scale methods + fusion
+│   ├── depth_3d.py                 # 3D crack length from depth/mesh/PCD
+│   ├── reference_scale.py          # Homography + reference segment scale
+│   ├── calibration.py              # px <-> mm conversions (3 methods)
+│   ├── integrate_pipeline.py       # End-to-end: image -> mask -> report
+│   ├── run_quantification.py       # CLI: mask -> report
+│   ├── width.py                    # Per-point width from distance transform
+│   ├── area.py                     # Pixel count area
+│   ├── severity.py                 # Rule-based severity + orientation
+│   ├── crack_3d.py                 # 3D crack length from reconstruction
+│   ├── test_quantification.py      # Self-test with synthetic mask
+│   ├── test_compare_methods.py     # MST/compare artifact tests
+│   └── test_research_pipeline.py   # Research primitive tests
+│
 ├── finalwebapp_api.py              # Flask API with 21+ endpoints
 ├── finalwebapp.py                  # Core analysis functions
 ├── image_3d_heightmap.py           # 3D model generation (GLB)
