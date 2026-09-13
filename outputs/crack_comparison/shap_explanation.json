@@ -1,0 +1,47 @@
+{
+  "available": true,
+  "model": "RandomForestRegressor",
+  "target": "absolute_error_px",
+  "feature_importance": [
+    {
+      "feature": "is_main_path",
+      "mean_abs_shap": 11.376795452910443
+    },
+    {
+      "feature": "is_mst",
+      "mean_abs_shap": 0.3712492199234714
+    },
+    {
+      "feature": "is_network",
+      "mean_abs_shap": 0.24098430521417788
+    },
+    {
+      "feature": "skeleton_pixels",
+      "mean_abs_shap": 0.22744921921020925
+    },
+    {
+      "feature": "is_morphological",
+      "mean_abs_shap": 0.18599014831325789
+    },
+    {
+      "feature": "is_zhang_suen",
+      "mean_abs_shap": 0.08335518298820561
+    },
+    {
+      "feature": "network_minus_main_px",
+      "mean_abs_shap": 0.04662193016118459
+    },
+    {
+      "feature": "is_guo_hall",
+      "mean_abs_shap": 0.03704916619746978
+    },
+    {
+      "feature": "components",
+      "mean_abs_shap": 0.0
+    },
+    {
+      "feature": "junctions",
+      "mean_abs_shap": 0.0
+    }
+  ]
+}

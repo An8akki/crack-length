@@ -1110,7 +1110,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import { API_URL } from "../config/apiConfig";
-import { Box, Upload, RotateCw, Settings2, Zap } from "lucide-react";
+import { Box, Upload, RotateCw, Settings2, Zap, Ruler, Calculator } from "lucide-react";
 import "../styles/heightmap3d.css";
 
 // Import GLTFLoader for GLB files
@@ -1295,6 +1295,20 @@ export default function Heightmap3D() {
     height_scale: 12.0,
     smooth_sigma: 1.2,
   });
+  const [scaleInputs, setScaleInputs] = useState({
+    focalMm: "50",
+    sensorMm: "36",
+    imageWidthPx: "1000",
+    distanceMm: "1000",
+    crackPixels: "250",
+  });
+
+  const focalPixels = Number(scaleInputs.focalMm) * Number(scaleInputs.imageWidthPx) /
+    Number(scaleInputs.sensorMm);
+  const mmPerPixel = focalPixels > 0
+    ? Number(scaleInputs.distanceMm) / focalPixels
+    : 0;
+  const estimatedLengthMm = mmPerPixel * Number(scaleInputs.crackPixels);
 
   async function handleUpload(e, useGLB = null) {
     // If useGLB is not provided, use the format state
@@ -1358,6 +1372,59 @@ export default function Heightmap3D() {
           <p style={{ margin: "0.5rem 0 0 0", color: "var(--secondary)", fontSize: "1rem" }}>
             Convert 2D structural images into interactive 3D models (GLB textured or STL) for advanced visualization
           </p>
+        </div>
+
+        <div className="card" style={{ marginBottom: "2rem", borderLeft: "4px solid #0f766e" }}>
+          <div className="card-header">
+            <h2 style={{ margin: 0, display: "flex", alignItems: "center", gap: "0.6rem" }}>
+              <Ruler size={24} />
+              Camera Scale Recovery
+            </h2>
+            <p style={{ margin: "0.25rem 0 0 0", color: "var(--secondary)", fontSize: "0.875rem" }}>
+              Calculate physical scale before crack-length estimation
+            </p>
+          </div>
+          <div className="card-body">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "1rem" }}>
+              {[
+                ["focalMm", "Focal length (mm)"],
+                ["sensorMm", "Sensor width (mm)"],
+                ["imageWidthPx", "Image width (px)"],
+                ["distanceMm", "Surface distance (mm)"],
+                ["crackPixels", "Crack length (px)"],
+              ].map(([key, label]) => (
+                <label key={key} style={{ display: "grid", gap: "0.4rem", color: "var(--dark)", fontWeight: 600, fontSize: "0.875rem" }}>
+                  {label}
+                  <input
+                    type="number"
+                    min="0.001"
+                    step="any"
+                    value={scaleInputs[key]}
+                    onChange={(event) => setScaleInputs({ ...scaleInputs, [key]: event.target.value })}
+                    style={{ padding: "0.65rem", border: "1px solid var(--glass-border)", borderRadius: "var(--border-radius)", fontSize: "1rem" }}
+                  />
+                </label>
+              ))}
+            </div>
+            <div style={{ marginTop: "1.25rem", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "0.75rem" }}>
+              <div style={{ padding: "1rem", background: "#ecfdf5", border: "1px solid #99f6e4", borderRadius: "var(--border-radius)" }}>
+                <span style={{ display: "block", color: "#115e59", fontSize: "0.8rem" }}>Effective focal length</span>
+                <strong style={{ fontSize: "1.35rem", color: "#134e4a" }}>{Number.isFinite(focalPixels) ? focalPixels.toFixed(2) : "-"} px</strong>
+              </div>
+              <div style={{ padding: "1rem", background: "#ecfdf5", border: "1px solid #99f6e4", borderRadius: "var(--border-radius)" }}>
+                <span style={{ display: "block", color: "#115e59", fontSize: "0.8rem" }}>Recovered scale</span>
+                <strong style={{ fontSize: "1.35rem", color: "#134e4a" }}>{Number.isFinite(mmPerPixel) ? mmPerPixel.toFixed(4) : "-"} mm/px</strong>
+              </div>
+              <div style={{ padding: "1rem", background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "var(--border-radius)" }}>
+                <span style={{ display: "block", color: "#9a3412", fontSize: "0.8rem" }}>Estimated crack length</span>
+                <strong style={{ fontSize: "1.35rem", color: "#7c2d12" }}>{Number.isFinite(estimatedLengthMm) ? estimatedLengthMm.toFixed(2) : "-"} mm</strong>
+              </div>
+            </div>
+            <p style={{ margin: "1rem 0 0", color: "#7c2d12", fontSize: "0.8rem", display: "flex", gap: "0.4rem", alignItems: "center" }}>
+              <Calculator size={15} />
+              Pinhole estimate for a fronto-parallel surface. Use a coplanar reference or metric depth for perspective-correct measurement.
+            </p>
+          </div>
         </div>
 
         {/* Upload Card */}

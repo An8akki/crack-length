@@ -368,6 +368,17 @@ const ImageAnalysis = () => {
                   </div>
 
                   <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
+                    <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)' }}>
+                      🟣 Crack MST Graph
+                    </div>
+                    {outputImages?.crack_mst_graph ? (
+                      <img src={outputImages.crack_mst_graph} alt="Crack MST graph" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)' }} />
+                    ) : (
+                      <div style={{ height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0' }}>Available when segmentation masks are returned</div>
+                    )}
+                  </div>
+
+                  <div className="image-card" style={{ padding: '1rem', background: 'var(--light)', borderRadius: 'var(--border-radius)', border: '1px solid var(--glass-border)' }}>
                     <div className="image-card-title" style={{ fontWeight: 600, marginBottom: '1rem', color: 'var(--dark)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       🔍 Crack Detection
                       <span style={{ fontSize: '0.875rem', color: 'var(--secondary)', fontWeight: 'normal' }}>
@@ -463,6 +474,32 @@ const ImageAnalysis = () => {
                     )}
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+          {results.crack_quantification && (
+            <div className="card" style={{ marginBottom: '2rem', borderLeft: '4px solid #0f766e' }}>
+              <div className="card-header">
+                <h2 style={{ margin: 0 }}>Crack Centreline Length</h2>
+                <p style={{ margin: '0.25rem 0 0', color: 'var(--secondary)', fontSize: '0.875rem' }}>
+                  Measured from the segmentation mask, not from the bounding box
+                </p>
+              </div>
+              <div className="card-body">
+                {results.crack_quantification.available ? (
+                  <>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                      <div><span>Pixel network length</span><strong style={{ display: 'block', fontSize: '1.4rem' }}>{results.crack_quantification.total_pixel_length?.toFixed(2)} px</strong></div>
+                      <div><span>Scale</span><strong style={{ display: 'block', fontSize: '1.4rem' }}>{results.crack_quantification.scale?.mm_per_px ? `${results.crack_quantification.scale.mm_per_px.toFixed(4)} mm/px` : 'Unavailable'}</strong></div>
+                      <div><span>Physical length</span><strong style={{ display: 'block', fontSize: '1.4rem' }}>{results.crack_quantification.total_length_mm ? `${results.crack_quantification.total_length_mm.toFixed(2)} mm` : 'Pixel-only'}</strong></div>
+                    </div>
+                    <p style={{ marginBottom: 0, color: '#9a3412', fontSize: '0.85rem' }}>
+                      Method: {results.crack_quantification.path_method} + network graph. Scale: {results.crack_quantification.scale?.method || 'not recovered'} ({results.crack_quantification.scale?.confidence || 'low confidence'}).
+                    </p>
+                  </>
+                ) : (
+                  <p style={{ margin: 0, color: '#9a3412' }}>{results.crack_quantification.reason}</p>
+                )}
               </div>
             </div>
           )}

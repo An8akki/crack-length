@@ -1,0 +1,183 @@
+{
+  "best": {
+    "path_method": "guo_hall",
+    "measure": "mst",
+    "length_px": 99.82842712474618,
+    "skeleton_pixels": 100,
+    "components": 1,
+    "junctions": 4,
+    "network_minus_main_px": 33.8284271247462,
+    "processing_time_ms": 17.12200000474695,
+    "true_length_px": 100.0,
+    "absolute_error_px": 0.17157287525381548,
+    "percentage_error": -0.17157287525381548
+  },
+  "ranking": [
+    {
+      "path_method": "guo_hall",
+      "measure": "mst",
+      "length_px": 99.82842712474618,
+      "skeleton_pixels": 100,
+      "components": 1,
+      "junctions": 4,
+      "network_minus_main_px": 33.8284271247462,
+      "processing_time_ms": 17.12200000474695,
+      "true_length_px": 100.0,
+      "absolute_error_px": 0.17157287525381548,
+      "percentage_error": -0.17157287525381548
+    },
+    {
+      "path_method": "zhang_suen",
+      "measure": "mst",
+      "length_px": 99.0,
+      "skeleton_pixels": 100,
+      "components": 1,
+      "junctions": 4,
+      "network_minus_main_px": 32.41421356237309,
+      "processing_time_ms": 21.388799999840558,
+      "true_length_px": 100.0,
+      "absolute_error_px": 1.0,
+      "percentage_error": -1.0
+    },
+    {
+      "path_method": "zhang_suen",
+      "measure": "network",
+      "length_px": 101.82842712474618,
+      "skeleton_pixels": 100,
+      "components": 1,
+      "junctions": 4,
+      "network_minus_main_px": 32.41421356237309,
+      "processing_time_ms": 21.388799999840558,
+      "true_length_px": 100.0,
+      "absolute_error_px": 1.8284271247461845,
+      "percentage_error": 1.8284271247461845
+    },
+    {
+      "path_method": "guo_hall",
+      "measure": "network",
+      "length_px": 102.65685424949238,
+      "skeleton_pixels": 100,
+      "components": 1,
+      "junctions": 4,
+      "network_minus_main_px": 33.8284271247462,
+      "processing_time_ms": 17.12200000474695,
+      "true_length_px": 100.0,
+      "absolute_error_px": 2.6568542494923832,
+      "percentage_error": 2.6568542494923832
+    },
+    {
+      "path_method": "morphological",
+      "measure": "mst",
+      "length_px": 102.82842712474618,
+      "skeleton_pixels": 103,
+      "components": 1,
+      "junctions": 4,
+      "network_minus_main_px": 33.41421356237311,
+      "processing_time_ms": 17.79569999780506,
+      "true_length_px": 100.0,
+      "absolute_error_px": 2.8284271247461845,
+      "percentage_error": 2.8284271247461845
+    },
+    {
+      "path_method": "morphological",
+      "measure": "network",
+      "length_px": 105.65685424949238,
+      "skeleton_pixels": 103,
+      "components": 1,
+      "junctions": 4,
+      "network_minus_main_px": 33.41421356237311,
+      "processing_time_ms": 17.79569999780506,
+      "true_length_px": 100.0,
+      "absolute_error_px": 5.656854249492383,
+      "percentage_error": 5.656854249492382
+    },
+    {
+      "path_method": "morphological",
+      "measure": "main_path",
+      "length_px": 72.24264068711928,
+      "skeleton_pixels": 103,
+      "components": 1,
+      "junctions": 4,
+      "network_minus_main_px": 33.41421356237311,
+      "processing_time_ms": 17.79569999780506,
+      "true_length_px": 100.0,
+      "absolute_error_px": 27.757359312880723,
+      "percentage_error": -27.757359312880723
+    },
+    {
+      "path_method": "zhang_suen",
+      "measure": "main_path",
+      "length_px": 69.41421356237309,
+      "skeleton_pixels": 100,
+      "components": 1,
+      "junctions": 4,
+      "network_minus_main_px": 32.41421356237309,
+      "processing_time_ms": 21.388799999840558,
+      "true_length_px": 100.0,
+      "absolute_error_px": 30.585786437626908,
+      "percentage_error": -30.585786437626908
+    },
+    {
+      "path_method": "guo_hall",
+      "measure": "main_path",
+      "length_px": 68.82842712474618,
+      "skeleton_pixels": 100,
+      "components": 1,
+      "junctions": 4,
+      "network_minus_main_px": 33.8284271247462,
+      "processing_time_ms": 17.12200000474695,
+      "true_length_px": 100.0,
+      "absolute_error_px": 31.171572875253815,
+      "percentage_error": -31.171572875253815
+    }
+  ],
+  "selection_rule": "lowest absolute error with ground truth; otherwise network measure for total crack length",
+  "explanation": "The selected method is best only for this evaluated sample. MST is preferred here because it removes redundant 8-connected cycle edges while retaining the crack branches. Longest geodesic is lower because it measures only the dominant path, not the full network.",
+  "shap": {
+    "available": true,
+    "model": "RandomForestRegressor",
+    "target": "absolute_error_px",
+    "feature_importance": [
+      {
+        "feature": "is_main_path",
+        "mean_abs_shap": 11.376795452910443
+      },
+      {
+        "feature": "is_mst",
+        "mean_abs_shap": 0.3712492199234714
+      },
+      {
+        "feature": "is_network",
+        "mean_abs_shap": 0.24098430521417788
+      },
+      {
+        "feature": "skeleton_pixels",
+        "mean_abs_shap": 0.22744921921020925
+      },
+      {
+        "feature": "is_morphological",
+        "mean_abs_shap": 0.18599014831325789
+      },
+      {
+        "feature": "is_zhang_suen",
+        "mean_abs_shap": 0.08335518298820561
+      },
+      {
+        "feature": "network_minus_main_px",
+        "mean_abs_shap": 0.04662193016118459
+      },
+      {
+        "feature": "is_guo_hall",
+        "mean_abs_shap": 0.03704916619746978
+      },
+      {
+        "feature": "components",
+        "mean_abs_shap": 0.0
+      },
+      {
+        "feature": "junctions",
+        "mean_abs_shap": 0.0
+      }
+    ]
+  }
+}

@@ -63,6 +63,15 @@ from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 
 try:
+    from crack_quantification.api_adapter import quantify_segmentation, mst_overlay
+    CRACK_QUANTIFICATION_AVAILABLE = True
+except Exception as e:
+    CRACK_QUANTIFICATION_AVAILABLE = False
+    quantify_segmentation = None
+    mst_overlay = None
+    print(f"⚠️ Crack quantification unavailable: {e}")
+
+try:
     from scipy import ndimage
     import scipy.stats as stats
     from skimage import measure
@@ -1326,9 +1335,26 @@ def analyze_image_comprehensive(image_np, px_to_cm_ratio=0.1, confidence_thresho
         growth_analysis, growth_image = detect_biological_growth(image_np, crack_details)
 
         # 3. Image Segmentation
-        segmented_image = segment_image(image_np, SEGMENTATION_MODEL)
+        result = segment_image(image_np, SEGMENTATION_MODEL)
+        if isinstance(result, tuple):
+            segmented_image, seg_results = result
+        else:
+            segmented_image = result
+            seg_results = None
         if segmented_image is None or not isinstance(segmented_image, np.ndarray):
             segmented_image = image_np.copy()  # Fallback to original image
+
+        if CRACK_QUANTIFICATION_AVAILABLE:
+            crack_quantification = quantify_segmentation(
+                seg_results, image_np.shape, image_rgb=image_np,
+                fallback_segmented_image=segmented_image
+            )
+        else:
+            crack_quantification = {
+                "available": False,
+                "reason": "crack_quantification package unavailable",
+                "instances": [],
+            }
 
         # 4. Depth Estimation
         preprocessed = preprocess_image_for_depth_estimation(image_np)
@@ -1478,6 +1504,15 @@ def analyze_image_comprehensive(image_np, px_to_cm_ratio=0.1, confidence_thresho
             "depth_estimation": image_to_base64(depth_heatmap),
             "edge_detection": image_to_base64(edges)
         }
+        if CRACK_QUANTIFICATION_AVAILABLE and mst_overlay is not None:
+            try:
+                mst_result = mst_overlay(image_np, seg_results, fallback_segmented_image=segmented_image)
+                if mst_result is not None:
+                    output_images["crack_mst_graph"] = image_to_base64(mst_result)
+                else:
+                    print("   ⚠️ MST overlay returned None")
+            except Exception as mst_err:
+                print(f"   ⚠️ Failed to generate MST overlay: {mst_err}")
 
         print("✅ All 6 images generated successfully")
 
@@ -1572,6 +1607,17 @@ def analyze():
             return jsonify({"error": "Failed to decode image"}), 400
         
         print(f"✅ Image decoded successfully: shape {image_np.shape}")
+
+        # Preserve the original file bytes so EXIF can be inspected for the
+        # optional 1x camera-scale estimate. OpenCV decoding discards EXIF.
+        scale_image_path = None
+        try:
+            suffix = ".jpg" if "jpeg" in str(data.get("image", "")) else ".png"
+            with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as handle:
+                handle.write(image_bytes)
+                scale_image_path = handle.name
+        except Exception as e:
+            print(f"⚠️ Could not preserve image metadata for scale recovery: {e}")
         
         # Get parameters
         px_to_cm_ratio = data.get('px_to_cm_ratio', 0.1)
@@ -1599,6 +1645,21 @@ def analyze():
                 seg_results = None
             if segmented_image is None or not isinstance(segmented_image, np.ndarray):
                 segmented_image = image_np.copy()  # Fallback to original image
+
+            # This is the missing length stage: use the actual segmentation
+            # mask, skeletonize it, and measure centreline graph length.
+            if CRACK_QUANTIFICATION_AVAILABLE:
+                crack_quantification = quantify_segmentation(
+                    seg_results, image_np.shape, image_rgb=image_np,
+                    image_path=scale_image_path,
+                    fallback_segmented_image=segmented_image
+                )
+            else:
+                crack_quantification = {
+                    "available": False,
+                    "reason": "crack_quantification package unavailable",
+                    "instances": [],
+                }
             
             # 4. Depth Estimation
             print("   [4/6] Estimating depth...")
@@ -1623,6 +1684,8 @@ def analyze():
             return jsonify({"error": f"Analysis failed during processing: {str(e)}"}), 500
         
         print("✅ All analysis steps completed")
+        if scale_image_path and os.path.exists(scale_image_path):
+            os.remove(scale_image_path)
         
         # Calculate statistics first
         total_cracks = len(crack_details)
@@ -1742,6 +1805,7 @@ def analyze():
                     "severity_distribution": severity_counts
                 }
             },
+            "crack_quantification": crack_quantification,
             "biological_growth": growth_analysis,
             "material_analysis": material_analysis,
             "environmental_impact_assessment": {
@@ -1855,6 +1919,18 @@ def analyze():
                 "depth_estimation": safe_encode_image(depth_heatmap),
                 "edge_detection": safe_encode_image(edges),
             }
+
+            # Generate the actual mask-derived MST overlay from the segmentation
+            # result so the returned visual matches the graph measurement pipeline.
+            if CRACK_QUANTIFICATION_AVAILABLE and mst_overlay is not None:
+                try:
+                    mst_result = mst_overlay(image_np, seg_results, fallback_segmented_image=segmented_image)
+                    if mst_result is not None:
+                        output_images["crack_mst_graph"] = safe_encode_image(mst_result)
+                    else:
+                        print("   ⚠️ MST overlay returned None for the current mask set")
+                except Exception as mst_err:
+                    print(f"   ⚠️ Failed to generate MST overlay: {mst_err}")
             
             # Generate additional analysis images with safe encoding
             try:
@@ -3017,11 +3093,24 @@ def generate_3d_glb():
     
     Returns: GLB binary file
     """
+    global HEIGHTMAP_GLB_AVAILABLE, generate_3d_glb_from_image
     try:
         print(f"📥 Received 3D GLB generation request")
         print(f"   - HEIGHTMAP_GLB_AVAILABLE: {HEIGHTMAP_GLB_AVAILABLE}")
         print(f"   - generate_3d_glb_from_image: {generate_3d_glb_from_image}")
-        
+
+        # Retry lazily so an optional dependency installed after server
+        # startup can be picked up without silently returning a generic 500.
+        if not HEIGHTMAP_GLB_AVAILABLE or generate_3d_glb_from_image is None:
+            try:
+                from image_3d_heightmap import generate_3d_glb_from_image as glb_generator
+                generate_3d_glb_from_image = glb_generator
+                HEIGHTMAP_GLB_AVAILABLE = True
+            except Exception as import_error:
+                error_msg = f"3D generator import failed: {import_error}"
+                print(f"❌ {error_msg}")
+                return jsonify({"error": error_msg}), 500
+
         if not HEIGHTMAP_GLB_AVAILABLE or generate_3d_glb_from_image is None:
             error_msg = '3D model generation dependencies not available. Please ensure trimesh, scipy, opencv-python are installed.'
             print(f"❌ {error_msg}")
