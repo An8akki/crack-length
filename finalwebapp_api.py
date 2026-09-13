@@ -1551,10 +1551,11 @@ def home():
         "status": "running",
         "description": "Flask API wrapper for structural health monitoring functionality",
         "models_status": MODELS_STATUS,
-        "endpoints": {
-            "health": "/api/health",
-            "analyze": "/api/analyze"
-        }
+            "endpoints": {
+                "health": "/api/health",
+                "analyze": "/api/analyze",
+                "crack_length": "/api/crack-length",
+            }
     })
 
 @app.route('/api/health', methods=['GET'])
@@ -3206,6 +3207,278 @@ def generate_3d_glb():
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
         
+# ✅ NEW ENDPOINT: Standalone Crack Length Estimation (3rd branch)
+# Independent from AI segmentation and 3D construction.
+# Uses AI segmentation model ONLY for mask extraction, then measures
+# crack length via skeletonization + graph analysis.
+@app.route('/api/crack-length', methods=['POST'])
+def crack_length():
+    """
+    Standalone crack length estimation endpoint.
+
+    This is the 3rd branch of the pipeline - separate from:
+    - AI segmentation (/api/analyze)
+    - 3D construction (/api/generate-3d-glb)
+
+    Accepts multipart/form-data:
+        - mask (optional): Binary crack mask image (0/255 grayscale)
+        - image (optional): Infrastructure image (auto-segmented if mask not provided)
+        - mm_per_px (optional): Known scale (mm per pixel)
+        - distance_mm (optional): Camera distance for auto-scale
+        - focal_length_mm (optional): Camera focal length
+        - sensor_width_mm (optional): Camera sensor width
+        - confidence_threshold (optional): Segmentation confidence (default 0.3)
+
+    Returns:
+    {
+        "length_px": total network length in pixels,
+        "length_mm": total network length in mm (if scale available),
+        "main_path_px": dominant path length in pixels,
+        "main_path_mm": dominant path length in mm,
+        "mst_length_px": MST length in pixels,
+        "mst_length_mm": MST length in mm,
+        "per_method": {method: {network_px, main_path_px, mst_px, ...}},
+        "components": number of connected components,
+        "junctions": number of junction points,
+        "endpoints": number of endpoints,
+        "scale": {mm_per_px, method, confidence},
+        "best_method": recommended method label,
+        "status": "success"
+    }
+    """
+    try:
+        print("📏 Received crack length estimation request")
+
+        # Parse optional scale parameters
+        mm_per_px = None
+        distance_mm = None
+        focal_length_mm = None
+        sensor_width_mm = None
+        confidence_threshold = 0.3
+
+        mm_per_px_str = request.form.get('mm_per_px')
+        if mm_per_px_str:
+            try:
+                mm_per_px = float(mm_per_px_str)
+            except ValueError:
+                pass
+
+        distance_mm_str = request.form.get('distance_mm')
+        if distance_mm_str:
+            try:
+                distance_mm = float(distance_mm_str)
+            except ValueError:
+                pass
+
+        focal_length_mm_str = request.form.get('focal_length_mm')
+        if focal_length_mm_str:
+            try:
+                focal_length_mm = float(focal_length_mm_str)
+            except ValueError:
+                pass
+
+        sensor_width_mm_str = request.form.get('sensor_width_mm')
+        if sensor_width_mm_str:
+            try:
+                sensor_width_mm = float(sensor_width_mm_str)
+            except ValueError:
+                pass
+
+        ct_str = request.form.get('confidence_threshold')
+        if ct_str:
+            try:
+                confidence_threshold = float(ct_str)
+            except ValueError:
+                pass
+
+        # Get mask or image
+        mask = None
+        image_rgb = None
+        mask_path = None
+        image_path = None
+
+        if 'mask' in request.files:
+            mask_file = request.files['mask']
+            if mask_file.filename != '':
+                mask_path = os.path.join(
+                    os.path.dirname(__file__), 'uploads',
+                    f"mask_{uuid.uuid4().hex}.png"
+                )
+                mask_file.save(mask_path)
+                try:
+                    if cv2 is not None:
+                        mask_gray = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+                        if mask_gray is not None:
+                            mask = (mask_gray > 0).astype(np.uint8)
+                    if mask is None:
+                        from PIL import Image as PILImage
+                        pil = PILImage.open(mask_path).convert('L')
+                        mask = (np.array(pil) > 0).astype(np.uint8)
+                except Exception as e:
+                    print(f"⚠️ Mask load failed: {e}")
+
+        if 'image' in request.files and mask is None:
+            image_file = request.files['image']
+            if image_file.filename != '':
+                image_path = os.path.join(
+                    os.path.dirname(__file__), 'uploads',
+                    f"img_{uuid.uuid4().hex}.png"
+                )
+                image_file.save(image_path)
+                try:
+                    if cv2 is not None:
+                        image_bgr = cv2.imread(image_path)
+                        if image_bgr is not None:
+                            image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
+                    if image_rgb is None:
+                        from PIL import Image as PILImage
+                        image_rgb = np.array(PILImage.open(image_path).convert('RGB'))
+                except Exception as e:
+                    print(f"⚠️ Image load failed: {e}")
+
+        # Run crack quantification
+        if mask is not None:
+            print(f"   - Using provided mask: shape {mask.shape}")
+        elif image_rgb is not None:
+            print(f"   - Using image, segmenting first...")
+            if CRACK_QUANTIFICATION_AVAILABLE and YOLO_MODEL is not None:
+                try:
+                    image_rgb_bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
+                    seg_result = segment_image(image_rgb_bgr, YOLO_MODEL)
+                    if isinstance(seg_result, tuple):
+                        _, seg_results = seg_result
+                    else:
+                        seg_results = None
+                    masks = masks_from_segmentation_results(
+                        seg_results, image_rgb.shape,
+                        fallback_mask=image_rgb_bgr
+                    )
+                    if masks:
+                        mask = masks[0]
+                    else:
+                        return jsonify({
+                            "status": "error",
+                            "reason": "Segmentation model found no cracks",
+                        }), 404
+                except Exception as e:
+                    print(f"⚠️ Segmentation failed: {e}")
+                    return jsonify({
+                        "status": "error",
+                        "reason": f"Segmentation failed: {str(e)}",
+                    }), 500
+            else:
+                return jsonify({
+                    "status": "error",
+                    "reason": "No mask provided and segmentation model unavailable",
+                }), 400
+        else:
+            return jsonify({
+                "status": "error",
+                "reason": "Provide either 'mask' or 'image' file",
+            }), 400
+
+        # Skeletonize using recommended method (guo_hall)
+        from crack_quantification.skeleton import skeletonize_mask
+        from crack_quantification.graph_analysis import analyze_skeleton
+        from crack_quantification.length import compute_length, _connected_components
+
+        skeleton = skeletonize_mask(mask, method="guo_hall")
+        if not skeleton.any():
+            skeleton = skeletonize_mask(mask, method="zhang_suen")
+
+        graph = analyze_skeleton(skeleton)
+        length = compute_length(skeleton)
+
+        n_comps = len(_connected_components(skeleton))
+
+        # Scale recovery
+        scale_info = None
+        if mm_per_px is not None:
+            scale_info = {"mm_per_px": float(mm_per_px), "method": "provided", "confidence": 1.0}
+        elif image_path or mask_path:
+            try:
+                from crack_quantification.autocalibrate import auto_calibrate
+                img_path = image_path or mask_path
+                scale = auto_calibrate(
+                    img_path, image_rgb=image_rgb,
+                    distance_mm=distance_mm,
+                    default_distance_mm=1000.0,
+                )
+                scale_info = {
+                    "mm_per_px": float(scale["mm_per_px"]),
+                    "method": scale["method"],
+                    "confidence": float(scale["confidence"]),
+                    "explanation": scale.get("explanation", ""),
+                }
+            except Exception as exc:
+                scale_info = {"mm_per_px": None, "method": "unavailable", "confidence": 0.0, "explanation": str(exc)}
+
+        length_mm = None
+        main_path_mm = None
+        mst_mm = None
+        if scale_info and scale_info["mm_per_px"] is not None:
+            s = scale_info["mm_per_px"]
+            length_mm = float(length["length_px"]) * s
+            main_path_mm = float(graph["main_path_px"]) * s
+            mst_mm = float(graph["mst_length_px"]) * s
+
+        # Per-method comparison
+        per_method = {}
+        for method_name, skel_method in [("zhang_suen", "zhang_suen"), ("guo_hall", "guo_hall"), ("morphological", "skeletonize")]:
+            m_graph = analyze_skeleton(skeletonize_mask(mask, method=skel_method))
+            entry = {
+                "network_px": float(m_graph["network_length_px"]),
+                "main_path_px": float(m_graph["main_path_px"]),
+                "mst_px": float(m_graph["mst_length_px"]),
+                "components": len(m_graph["components"]),
+                "junctions": m_graph["junction_count"],
+            }
+            if scale_info and scale_info["mm_per_px"] is not None:
+                s = scale_info["mm_per_px"]
+                entry["network_mm"] = entry["network_px"] * s
+                entry["main_path_mm"] = entry["main_path_px"] * s
+                entry["mst_mm"] = entry["mst_px"] * s
+            per_method[method_name] = entry
+
+        result = {
+            "status": "success",
+            "length_px": length["length_px"],
+            "length_mm": length_mm,
+            "main_path_px": float(graph["main_path_px"]),
+            "main_path_mm": main_path_mm,
+            "mst_length_px": float(graph["mst_length_px"]),
+            "mst_length_mm": mst_mm,
+            "per_method": per_method,
+            "components": n_comps,
+            "junctions": graph["junction_count"],
+            "endpoints": graph["endpoint_count"],
+            "skeleton_pixels": int(skeleton.sum()),
+            "scale": scale_info,
+            "best_method": "guo_hall + network",
+            "recommendation": "guo_hall + network graph for total branched crack length",
+        }
+
+        # Cleanup temp files
+        for tmp in [mask_path, image_path]:
+            if tmp and os.path.exists(tmp):
+                try:
+                    os.remove(tmp)
+                except Exception:
+                    pass
+
+        print(f"✅ Crack length: {result['length_px']:.1f}px")
+        if length_mm is not None:
+            print(f"   Physical: {length_mm:.2f}mm (scale: {scale_info['method']})")
+
+        return jsonify(result)
+
+    except Exception as e:
+        print(f"❌ Crack length estimation failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "reason": str(e)}), 500
+
+
 if __name__ == '__main__':
     print("🚀 Starting InfraVision AI API Server...")
     
@@ -3217,6 +3490,7 @@ if __name__ == '__main__':
     print("🔧 API Endpoints:")
     print("   - GET  /api/health - Health check")
     print("   - POST /api/analyze - Analyze uploaded image")
+    print("   - POST /api/crack-length - Standalone crack length estimation")
     print("   - POST /api/camera_capture - Capture and analyze from camera")
     print("   - POST /api/start_realtime_capture - Start real-time camera capture")
     print("   - POST /api/capture_and_analyze - Capture frame and analyze")
