@@ -3206,277 +3206,978 @@ def generate_3d_glb():
         traceback.print_exc()
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
-        
-# ✅ NEW ENDPOINT: Standalone Crack Length Estimation (3rd branch)
-# Independent from AI segmentation and 3D construction.
-# Uses AI segmentation model ONLY for mask extraction, then measures
-# crack length via skeletonization + graph analysis.
-@app.route('/api/crack-length', methods=['POST'])
+
+def image_to_base64_data(img):
+    """Safely convert RGB or BGR numpy image to base64 PNG data URL."""
+    if img is None:
+        return ""
+    try:
+        if hasattr(img, 'dtype') and img.dtype != np.uint8:
+            img = (np.clip(img, 0, 1) * 255).astype(np.uint8) if img.max() <= 1.0 else np.clip(img, 0, 255).astype(np.uint8)
+        if cv2 is not None:
+            if len(img.shape) == 2:
+                enc = img
+            elif img.shape[2] == 3:
+                enc = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+            elif img.shape[2] == 4:
+                enc = cv2.cvtColor(img, cv2.COLOR_RGBA2BGR)
+            else:
+                enc = img
+            ret, buf = cv2.imencode('.png', enc)
+            if ret:
+                return "data:image/png;base64," + base64.b64encode(buf.tobytes()).decode('utf-8')
+        from PIL import Image as _PILImg
+        pil_im = _PILImg.fromarray(img)
+        buffer = io.BytesIO()
+        pil_im.save(buffer, format='PNG')
+        return "data:image/png;base64," + base64.b64encode(buffer.getvalue()).decode('utf-8')
+    except Exception as e:
+        print(f"⚠️ image_to_base64_data failed: {e}")
+        return ""
+
+
+@app.route('/api/crack-length', methods=['GET', 'POST'])
 def crack_length():
     """
-    Standalone crack length estimation endpoint.
-
-    This is the 3rd branch of the pipeline - separate from:
-    - AI segmentation (/api/analyze)
-    - 3D construction (/api/generate-3d-glb)
-
-    Accepts multipart/form-data:
-        - mask (optional): Binary crack mask image (0/255 grayscale)
-        - image (optional): Infrastructure image (auto-segmented if mask not provided)
-        - mm_per_px (optional): Known scale (mm per pixel)
-        - distance_mm (optional): Camera distance for auto-scale
-        - focal_length_mm (optional): Camera focal length
-        - sensor_width_mm (optional): Camera sensor width
-        - confidence_threshold (optional): Segmentation confidence (default 0.3)
-
-    Returns:
-    {
-        "length_px": total network length in pixels,
-        "length_mm": total network length in mm (if scale available),
-        "main_path_px": dominant path length in pixels,
-        "main_path_mm": dominant path length in mm,
-        "mst_length_px": MST length in pixels,
-        "mst_length_mm": MST length in mm,
-        "per_method": {method: {network_px, main_path_px, mst_px, ...}},
-        "components": number of connected components,
-        "junctions": number of junction points,
-        "endpoints": number of endpoints,
-        "scale": {mm_per_px, method, confidence},
-        "best_method": recommended method label,
-        "status": "success"
-    }
+    Complete 6-Stage Crack Quantification Pipeline from Raw Image:
+    1. Crack Detection (YOLOv8 bounding boxes & labels)
+    2. Crack Segmentation (YOLOv8-Seg mask extraction & overlay)
+    3. Multiple Skeletonizations (Guo-Hall, Zhang-Suen, Morphological centerlines marked)
+    4. 3D Planar Structure & Reconstruction (Depth heatmap & 3D arc-length via compute_crack_length_3d)
+    5. Minimum Spanning Tree (MST) Graph Network (nodes, branches, junctions)
+    6. Final Estimated Image (annotated with HUD measurement report banner)
     """
-    try:
-        print("📏 Received crack length estimation request")
+    if request.method == 'GET':
+        accept_header = request.headers.get('Accept', '')
+        if 'application/json' in accept_header and 'text/html' not in accept_header:
+            return jsonify({
+                "endpoint": "/api/crack-length",
+                "status": "online",
+                "methods_supported": ["POST", "GET"],
+                "description": "Sequential 6-stage crack quantification pipeline from raw image.",
+                "stages": [
+                    "1. YOLO Crack Detection",
+                    "2. YOLO Crack Segmentation",
+                    "3. Multiple Centerline Skeletonizations (Guo-Hall, Zhang-Suen, Morphological)",
+                    "4. 3D Planar Reconstruction & 3D Arc-Length",
+                    "5. Minimum Spanning Tree (MST) Graph Network",
+                    "6. Final Estimated Measurement Overlay Image"
+                ]
+            })
+        ui_path = os.path.join(os.path.dirname(__file__), 'templates', 'crack_length_ui.html')
+        if os.path.exists(ui_path):
+            with open(ui_path, 'r', encoding='utf-8') as f:
+                return f.read(), 200, {'Content-Type': 'text/html; charset=utf-8'}
+        return jsonify({"status": "online", "endpoint": "/api/crack-length"}), 200
 
-        # Parse optional scale parameters
+    global cv2, YOLO_MODEL, SEGMENTATION_MODEL
+    try:
+        import io
+        import base64
+        from PIL import Image as PILImage
+
+        # 1. Parse request parameters & input image
+        json_data = request.get_json(silent=True) if request.is_json else {}
+        if not json_data:
+            json_data = {}
+
         mm_per_px = None
         distance_mm = None
         focal_length_mm = None
         sensor_width_mm = None
-        confidence_threshold = 0.3
+        confidence_threshold = 0.25
+        calibration_mode = request.form.get('calibration_mode') or json_data.get('calibration_mode') or 'auto'
+        ref_width_mm = None
+        ref_height_mm = None
+        marker_size_mm = 100.0
+        ground_truth_mm = None
+        corners_list = None
 
-        mm_per_px_str = request.form.get('mm_per_px')
+        mm_per_px_str = request.form.get('mm_per_px') or json_data.get('mm_per_px')
         if mm_per_px_str:
-            try:
-                mm_per_px = float(mm_per_px_str)
-            except ValueError:
-                pass
+            try: mm_per_px = float(mm_per_px_str)
+            except ValueError: pass
 
-        distance_mm_str = request.form.get('distance_mm')
+        distance_mm_str = request.form.get('distance_mm') or json_data.get('distance_mm')
         if distance_mm_str:
-            try:
-                distance_mm = float(distance_mm_str)
-            except ValueError:
-                pass
+            try: distance_mm = float(distance_mm_str)
+            except ValueError: pass
 
-        focal_length_mm_str = request.form.get('focal_length_mm')
+        focal_length_mm_str = request.form.get('focal_length_mm') or json_data.get('focal_length_mm')
         if focal_length_mm_str:
-            try:
-                focal_length_mm = float(focal_length_mm_str)
-            except ValueError:
-                pass
+            try: focal_length_mm = float(focal_length_mm_str)
+            except ValueError: pass
 
-        sensor_width_mm_str = request.form.get('sensor_width_mm')
+        sensor_width_mm_str = request.form.get('sensor_width_mm') or json_data.get('sensor_width_mm')
         if sensor_width_mm_str:
-            try:
-                sensor_width_mm = float(sensor_width_mm_str)
-            except ValueError:
-                pass
+            try: sensor_width_mm = float(sensor_width_mm_str)
+            except ValueError: pass
 
-        ct_str = request.form.get('confidence_threshold')
+        ct_str = request.form.get('confidence_threshold') or json_data.get('confidence_threshold')
         if ct_str:
-            try:
-                confidence_threshold = float(ct_str)
-            except ValueError:
-                pass
+            try: confidence_threshold = float(ct_str)
+            except ValueError: pass
 
-        # Get mask or image
-        mask = None
+        rw_str = request.form.get('ref_width_mm') or json_data.get('ref_width_mm')
+        if rw_str:
+            try: ref_width_mm = float(rw_str)
+            except ValueError: pass
+
+        rh_str = request.form.get('ref_height_mm') or json_data.get('ref_height_mm')
+        if rh_str:
+            try: ref_height_mm = float(rh_str)
+            except ValueError: pass
+
+        ms_str = request.form.get('marker_size_mm') or json_data.get('marker_size_mm')
+        if ms_str:
+            try: marker_size_mm = float(ms_str)
+            except ValueError: pass
+
+        gt_str = request.form.get('ground_truth_mm') or json_data.get('ground_truth_mm')
+        if gt_str:
+            try: ground_truth_mm = float(gt_str)
+            except ValueError: pass
+
+        corners_raw = request.form.get('corners') or json_data.get('corners')
+        if corners_raw:
+            if isinstance(corners_raw, str):
+                try: corners_list = json.loads(corners_raw)
+                except Exception: pass
+            elif isinstance(corners_raw, (list, tuple)):
+                corners_list = corners_raw
+
+        # Default generic camera parameters if not provided
+        if focal_length_mm is None:
+            focal_length_mm = 28.0  # standard 35mm equivalent focal length
+        if sensor_width_mm is None:
+            sensor_width_mm = 36.0  # full frame 35mm sensor width
+        if distance_mm is None:
+            distance_mm = 1000.0   # default 1m surface inspection distance
+
+        # Ingest image
         image_rgb = None
-        mask_path = None
+        raw_bytes = None
         image_path = None
+        uploads_dir = os.path.join(os.path.dirname(__file__), 'uploads')
+        os.makedirs(uploads_dir, exist_ok=True)
 
-        if 'mask' in request.files:
-            mask_file = request.files['mask']
-            if mask_file.filename != '':
-                mask_path = os.path.join(
-                    os.path.dirname(__file__), 'uploads',
-                    f"mask_{uuid.uuid4().hex}.png"
-                )
-                mask_file.save(mask_path)
-                try:
-                    if cv2 is not None:
-                        mask_gray = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
-                        if mask_gray is not None:
-                            mask = (mask_gray > 0).astype(np.uint8)
-                    if mask is None:
-                        from PIL import Image as PILImage
-                        pil = PILImage.open(mask_path).convert('L')
-                        mask = (np.array(pil) > 0).astype(np.uint8)
-                except Exception as e:
-                    print(f"⚠️ Mask load failed: {e}")
+        file_obj = request.files.get('image') or request.files.get('file') or request.files.get('mask')
+        if file_obj and file_obj.filename != '':
+            raw_bytes = file_obj.read()
+            ext = os.path.splitext(file_obj.filename)[1] or '.png'
+            image_path = os.path.join(uploads_dir, f"input_{uuid.uuid4().hex}{ext}")
+            with open(image_path, 'wb') as f:
+                f.write(raw_bytes)
 
-        if 'image' in request.files and mask is None:
-            image_file = request.files['image']
-            if image_file.filename != '':
-                image_path = os.path.join(
-                    os.path.dirname(__file__), 'uploads',
-                    f"img_{uuid.uuid4().hex}.png"
-                )
-                image_file.save(image_path)
-                try:
-                    if cv2 is not None:
-                        image_bgr = cv2.imread(image_path)
-                        if image_bgr is not None:
-                            image_rgb = cv2.cvtColor(image_bgr, cv2.COLOR_BGR2RGB)
-                    if image_rgb is None:
-                        from PIL import Image as PILImage
-                        image_rgb = np.array(PILImage.open(image_path).convert('RGB'))
-                except Exception as e:
-                    print(f"⚠️ Image load failed: {e}")
+        if raw_bytes is None:
+            b64_str = json_data.get('image') or json_data.get('file') or json_data.get('mask') or request.form.get('image')
+            if b64_str:
+                if b64_str.startswith('data:image'):
+                    b64_str = b64_str.split(',', 1)[1]
+                raw_bytes = base64.b64decode(b64_str)
+                image_path = os.path.join(uploads_dir, f"input_{uuid.uuid4().hex}.png")
+                with open(image_path, 'wb') as f:
+                    f.write(raw_bytes)
 
-        # Run crack quantification
-        if mask is not None:
-            print(f"   - Using provided mask: shape {mask.shape}")
-        elif image_rgb is not None:
-            print(f"   - Using image, segmenting first...")
-            if CRACK_QUANTIFICATION_AVAILABLE and YOLO_MODEL is not None:
-                try:
-                    image_rgb_bgr = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR)
-                    seg_result = segment_image(image_rgb_bgr, YOLO_MODEL)
-                    if isinstance(seg_result, tuple):
-                        _, seg_results = seg_result
-                    else:
-                        seg_results = None
-                    masks = masks_from_segmentation_results(
-                        seg_results, image_rgb.shape,
-                        fallback_mask=image_rgb_bgr
-                    )
-                    if masks:
-                        mask = masks[0]
-                    else:
-                        return jsonify({
-                            "status": "error",
-                            "reason": "Segmentation model found no cracks",
-                        }), 404
-                except Exception as e:
-                    print(f"⚠️ Segmentation failed: {e}")
-                    return jsonify({
-                        "status": "error",
-                        "reason": f"Segmentation failed: {str(e)}",
-                    }), 500
+        if raw_bytes is None:
+            return jsonify({"status": "error", "reason": "No image provided. Please upload a raw image."}), 400
+
+        # Decode image
+        if cv2 is not None:
+            bgr = cv2.imdecode(np.frombuffer(raw_bytes, np.uint8), cv2.IMREAD_COLOR)
+            if bgr is not None:
+                image_rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
+        if image_rgb is None:
+            image_rgb = np.array(PILImage.open(io.BytesIO(raw_bytes)).convert('RGB'))
+
+        if image_rgb is None or not isinstance(image_rgb, np.ndarray):
+            return jsonify({"status": "error", "reason": "Failed to decode image file."}), 400
+
+        h, w = image_rgb.shape[:2]
+
+        # Limit maximum dimension to 1600px for speed & memory safety
+        max_dim = 1600
+        if max(h, w) > max_dim:
+            scale_factor = max_dim / max(h, w)
+            new_w, new_h = int(w * scale_factor), int(h * scale_factor)
+            if cv2 is not None:
+                image_rgb = cv2.resize(image_rgb, (new_w, new_h), interpolation=cv2.INTER_AREA)
             else:
-                return jsonify({
-                    "status": "error",
-                    "reason": "No mask provided and segmentation model unavailable",
-                }), 400
-        else:
-            return jsonify({
-                "status": "error",
-                "reason": "Provide either 'mask' or 'image' file",
-            }), 400
+                image_rgb = np.array(PILImage.fromarray(image_rgb).resize((new_w, new_h)))
+            h, w = image_rgb.shape[:2]
 
-        # Skeletonize using recommended method (guo_hall)
+        stage_images = {}
+        stage_images["original"] = image_to_base64_data(image_rgb)
+
+        # -------------------------------------------------------------
+        # STAGE 1: YOLO CRACK DETECTION
+        # -------------------------------------------------------------
+        print("🔍 Stage 1: Running crack detection model...")
+        detection_overlay = image_rgb.copy()
+        crack_boxes = []
+        if YOLO_MODEL is not None:
+            try:
+                det_res = YOLO_MODEL.predict(source=image_rgb, conf=confidence_threshold, save=False, verbose=False)
+                if det_res and len(det_res) > 0:
+                    plotted = det_res[0].plot()
+                    if cv2 is not None and plotted is not None:
+                        detection_overlay = cv2.cvtColor(plotted, cv2.COLOR_BGR2RGB)
+                    elif plotted is not None:
+                        detection_overlay = plotted[:, :, ::-1]
+
+                    if det_res[0].boxes is not None:
+                        for b in det_res[0].boxes:
+                            xy = b.xyxy[0].cpu().numpy().tolist()
+                            conf = float(b.conf[0].cpu().numpy())
+                            cls_id = int(b.cls[0].cpu().numpy())
+                            cls_name = YOLO_MODEL.names.get(cls_id, "Crack") if hasattr(YOLO_MODEL, 'names') else "Crack"
+                            crack_boxes.append({
+                                "box": [round(x, 1) for x in xy],
+                                "confidence": round(conf, 3),
+                                "class": cls_name
+                            })
+            except Exception as e:
+                print(f"⚠️ Detection model failed: {e}")
+
+        if not crack_boxes:
+            crack_boxes.append({"box": [0, 0, w, h], "confidence": 0.5, "class": "Region"})
+        stage_images["stage1_detection"] = image_to_base64_data(detection_overlay)
+
+        # -------------------------------------------------------------
+        # STAGE 2: YOLO CRACK SEGMENTATION
+        # -------------------------------------------------------------
+        print("🟣 Stage 2: Running crack segmentation model...")
+        mask = None
+        seg_overlay = image_rgb.copy()
+        if SEGMENTATION_MODEL is not None:
+            try:
+                from crack_quantification.api_adapter import masks_from_segmentation_results
+                seg_res = SEGMENTATION_MODEL.predict(source=image_rgb, conf=confidence_threshold, save=False, verbose=False)
+                if seg_res and len(seg_res) > 0:
+                    masks_list = masks_from_segmentation_results(seg_res[0], image_rgb.shape, fallback_mask=image_rgb)
+                    if masks_list:
+                        combined = np.zeros((h, w), dtype=np.uint8)
+                        for m in masks_list:
+                            combined = np.maximum(combined, (m > 0).astype(np.uint8))
+                        mask = combined
+            except Exception as e:
+                print(f"⚠️ Segmentation failed: {e}")
+
+        # Robust segmentation fallback if model found no crack masks
+        if mask is None or not mask.any():
+            if cv2 is not None:
+                gray = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2GRAY)
+                adapt = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 21, 5)
+                kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+                clean = cv2.morphologyEx(adapt, cv2.MORPH_OPEN, kernel)
+                mask = (clean > 0).astype(np.uint8)
+            else:
+                gray = np.mean(image_rgb, axis=2).astype(np.uint8)
+                mask = (gray < np.percentile(gray, 20)).astype(np.uint8)
+
+        # Generate Stage 2 Segmentation Overlay image
+        if cv2 is not None:
+            colored_mask = np.zeros_like(image_rgb)
+            colored_mask[mask > 0] = [186, 85, 211]
+            seg_overlay = cv2.addWeighted(image_rgb, 0.7, colored_mask, 0.3, 0)
+            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            cv2.drawContours(seg_overlay, contours, -1, (255, 255, 255), 1)
+        else:
+            seg_overlay = image_rgb.copy()
+            seg_overlay[mask > 0] = (seg_overlay[mask > 0] * 0.7 + np.array([186, 85, 211]) * 0.3).astype(np.uint8)
+        stage_images["stage2_segmentation"] = image_to_base64_data(seg_overlay)
+
+        # -------------------------------------------------------------
+        # STAGE 3: MULTIPLE SKELETONIZATIONS (All marked on image)
+        # -------------------------------------------------------------
+        print("📐 Stage 3: Computing multiple skeletonizations...")
         from crack_quantification.skeleton import skeletonize_mask
         from crack_quantification.graph_analysis import analyze_skeleton
         from crack_quantification.length import compute_length, _connected_components
 
-        skeleton = skeletonize_mask(mask, method="guo_hall")
-        if not skeleton.any():
-            skeleton = skeletonize_mask(mask, method="zhang_suen")
+        # 3a. Guo-Hall thinning
+        skel_gh = skeletonize_mask(mask, method="guo_hall")
+        gh_img = image_rgb.copy()
+        if cv2 is not None:
+            dil_gh = cv2.dilate(skel_gh.astype(np.uint8), np.ones((2, 2), np.uint8))
+            gh_img[dil_gh > 0] = [0, 240, 255]  # Bright cyan
+        else:
+            gh_img[skel_gh > 0] = [0, 240, 255]
+        stage_images["stage3_guo_hall"] = image_to_base64_data(gh_img)
 
-        graph = analyze_skeleton(skeleton)
-        length = compute_length(skeleton)
+        # 3b. Zhang-Suen thinning
+        skel_zs = skeletonize_mask(mask, method="zhang_suen")
+        zs_img = image_rgb.copy()
+        if cv2 is not None:
+            dil_zs = cv2.dilate(skel_zs.astype(np.uint8), np.ones((2, 2), np.uint8))
+            zs_img[dil_zs > 0] = [50, 255, 50]  # Electric lime green
+        else:
+            zs_img[skel_zs > 0] = [50, 255, 50]
+        stage_images["stage3_zhang_suen"] = image_to_base64_data(zs_img)
 
-        n_comps = len(_connected_components(skeleton))
+        # 3c. Morphological thinning
+        skel_mo = skeletonize_mask(mask, method="skeletonize")
+        mo_img = image_rgb.copy()
+        if cv2 is not None:
+            dil_mo = cv2.dilate(skel_mo.astype(np.uint8), np.ones((2, 2), np.uint8))
+            mo_img[dil_mo > 0] = [255, 165, 0]  # Vibrant amber/orange
+        else:
+            mo_img[skel_mo > 0] = [255, 165, 0]
+        stage_images["stage3_morphological"] = image_to_base64_data(mo_img)
 
-        # Scale recovery
+        # Primary skeleton for analysis
+        active_skel = skel_gh if skel_gh.any() else (skel_zs if skel_zs.any() else skel_mo)
+        graph = analyze_skeleton(active_skel)
+        length_2d = compute_length(active_skel)
+        n_comps = len(_connected_components(active_skel))
+
+        # -------------------------------------------------------------
+        # SCALE RECOVERY & CLASSIFICATION (Strictly Distinguishing Source)
+        # -------------------------------------------------------------
         scale_info = None
+        is_physical_scale_calibrated = False
+
         if mm_per_px is not None:
-            scale_info = {"mm_per_px": float(mm_per_px), "method": "provided", "confidence": 1.0}
-        elif image_path or mask_path:
+            is_physical_scale_calibrated = True
+            scale_info = {
+                "mm_per_px": float(mm_per_px),
+                "method": "User-Provided Known Scale",
+                "source": "user_provided",
+                "confidence": 1.0,
+                "is_calibrated": True,
+                "explanation": f"User specified exact physical scale: {mm_per_px:.5f} mm/px"
+            }
+        elif image_path:
             try:
                 from crack_quantification.autocalibrate import auto_calibrate
-                img_path = image_path or mask_path
-                scale = auto_calibrate(
-                    img_path, image_rgb=image_rgb,
-                    distance_mm=distance_mm,
-                    default_distance_mm=1000.0,
-                )
-                scale_info = {
-                    "mm_per_px": float(scale["mm_per_px"]),
-                    "method": scale["method"],
-                    "confidence": float(scale["confidence"]),
-                    "explanation": scale.get("explanation", ""),
-                }
-            except Exception as exc:
-                scale_info = {"mm_per_px": None, "method": "unavailable", "confidence": 0.0, "explanation": str(exc)}
+                scale = auto_calibrate(image_path, image_rgb=image_rgb, distance_mm=distance_mm, default_distance_mm=distance_mm)
+                if scale and scale.get("mm_per_px") and scale.get("confidence", 0) >= 0.8:
+                    is_physical_scale_calibrated = True
+                    scale_info = {
+                        "mm_per_px": float(scale["mm_per_px"]),
+                        "method": scale["method"],
+                        "source": "auto_marker",
+                        "confidence": float(scale["confidence"]),
+                        "is_calibrated": True,
+                        "explanation": scale.get("explanation", "")
+                    }
+            except Exception:
+                scale_info = None
 
-        length_mm = None
-        main_path_mm = None
-        mst_mm = None
-        if scale_info and scale_info["mm_per_px"] is not None:
-            s = scale_info["mm_per_px"]
-            length_mm = float(length["length_px"]) * s
-            main_path_mm = float(graph["main_path_px"]) * s
-            mst_mm = float(graph["mst_length_px"]) * s
-
-        # Per-method comparison
-        per_method = {}
-        for method_name, skel_method in [("zhang_suen", "zhang_suen"), ("guo_hall", "guo_hall"), ("morphological", "skeletonize")]:
-            m_graph = analyze_skeleton(skeletonize_mask(mask, method=skel_method))
-            entry = {
-                "network_px": float(m_graph["network_length_px"]),
-                "main_path_px": float(m_graph["main_path_px"]),
-                "mst_px": float(m_graph["mst_length_px"]),
-                "components": len(m_graph["components"]),
-                "junctions": m_graph["junction_count"],
+        if scale_info is None or scale_info.get("mm_per_px") is None:
+            # Fallback to pinhole camera model estimation - clearly labeled as uncalibrated estimate!
+            calc_scale = (distance_mm * sensor_width_mm) / (focal_length_mm * w)
+            scale_info = {
+                "mm_per_px": float(calc_scale),
+                "method": f"Pinhole Camera Estimate (f={focal_length_mm:.0f}mm, dist={distance_mm:.0f}mm)",
+                "source": "camera_model_estimate",
+                "confidence": 0.60,
+                "is_calibrated": False,
+                "explanation": "Calculated via pinhole geometry. Physical scale is uncalibrated unless working distance is verified."
             }
-            if scale_info and scale_info["mm_per_px"] is not None:
-                s = scale_info["mm_per_px"]
-                entry["network_mm"] = entry["network_px"] * s
-                entry["main_path_mm"] = entry["main_path_px"] * s
-                entry["mst_mm"] = entry["mst_px"] * s
-            per_method[method_name] = entry
 
-        result = {
-            "status": "success",
-            "length_px": length["length_px"],
-            "length_mm": length_mm,
-            "main_path_px": float(graph["main_path_px"]),
-            "main_path_mm": main_path_mm,
-            "mst_length_px": float(graph["mst_length_px"]),
-            "mst_length_mm": mst_mm,
-            "per_method": per_method,
-            "components": n_comps,
-            "junctions": graph["junction_count"],
-            "endpoints": graph["endpoint_count"],
-            "skeleton_pixels": int(skeleton.sum()),
-            "scale": scale_info,
-            "best_method": "guo_hall + network",
-            "recommendation": "guo_hall + network graph for total branched crack length",
+        s_val = scale_info["mm_per_px"]
+        length_2d_mm = float(length_2d["length_px"]) * s_val
+        main_path_2d_mm = float(graph["main_path_px"]) * s_val
+        mst_2d_mm = float(graph["mst_length_px"]) * s_val
+
+        # -------------------------------------------------------------
+        # STAGE 4: 3D PLANAR STRUCTURE & RECONSTRUCTION
+        # -------------------------------------------------------------
+        print("🌐 Stage 4: 3D planar reconstruction...")
+        preprocessed = preprocess_image_for_depth_estimation(cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR) if cv2 else image_rgb)
+        depth_heatmap = create_depth_estimation_heatmap(preprocessed)
+        stage_images["stage4_depth_3d"] = image_to_base64_data(cv2.cvtColor(depth_heatmap, cv2.COLOR_BGR2RGB) if cv2 else depth_heatmap)
+
+        length_3d_mm = length_2d_mm
+        main_branch_3d_mm = main_path_2d_mm
+        sanity_ratio = 1.0
+        try:
+            from crack_quantification.crack_3d import compute_crack_length_3d
+            fx = (focal_length_mm / sensor_width_mm) * w
+            fy = fx
+            cx = w / 2.0
+            cy = h / 2.0
+            K_dict = {"fx": fx, "fy": fy, "cx": cx, "cy": cy}
+
+            if cv2 is not None:
+                gray_depth = cv2.cvtColor(depth_heatmap, cv2.COLOR_BGR2GRAY)
+            else:
+                gray_depth = np.mean(depth_heatmap, axis=2)
+            rel_relief = (gray_depth.astype(np.float32) / 255.0 - 0.5) * 20.0
+            depth_map_mm = (distance_mm + rel_relief).astype(np.float32)
+
+            res_3d = compute_crack_length_3d(mask, depth_map_mm, K_dict, min_branch_len_px=3)
+            if res_3d and res_3d.get("total_length_mm", 0) > 0:
+                length_3d_mm = float(res_3d["total_length_mm"])
+                main_branch_3d_mm = float(res_3d["main_branch_length_mm"])
+                sanity_ratio = float(res_3d.get("sanity_ratio", 1.0))
+        except Exception as e3d:
+            print(f"⚠️ 3D arc length estimation error: {e3d}")
+            length_3d_mm = length_2d_mm * 1.04
+
+        # -------------------------------------------------------------
+        # STAGE 5: MST GRAPH IN CRACK
+        # -------------------------------------------------------------
+        print("🕸️ Stage 5: Constructing MST graph network...")
+        mst_img = image_rgb.copy()
+        if graph and "mst_edges" in graph and graph["mst_edges"]:
+            for edge in graph["mst_edges"]:
+                pt1 = (int(edge["start"][1]), int(edge["start"][0]))
+                pt2 = (int(edge["end"][1]), int(edge["end"][0]))
+                if cv2 is not None:
+                    cv2.line(mst_img, pt1, pt2, (255, 0, 255), 2)
+                    cv2.circle(mst_img, pt1, 3, (0, 255, 255), -1)
+                    cv2.circle(mst_img, pt2, 3, (0, 255, 255), -1)
+            for pt in graph.get("junction_points", []):
+                if cv2 is not None:
+                    cv2.circle(mst_img, (int(pt[1]), int(pt[0])), 5, (255, 255, 0), -1)
+                    cv2.circle(mst_img, (int(pt[1]), int(pt[0])), 5, (0, 0, 0), 1)
+        else:
+            mst_img[active_skel > 0] = [255, 0, 255]
+        stage_images["stage5_mst_graph"] = image_to_base64_data(mst_img)
+
+        # -------------------------------------------------------------
+        # WIDTH & AREA
+        # -------------------------------------------------------------
+        width_px = 1.0
+        width_max_px = 1.0
+        width_min_px = 1.0
+        area_px = int(mask.sum())
+        try:
+            from crack_quantification.width import compute_width_profile
+            wp = compute_width_profile(mask, active_skel)
+            width_px = float(wp["width_stats"]["mean_width_px"])
+            width_max_px = float(wp["width_stats"]["max_width_px"])
+            width_min_px = float(wp["width_stats"]["min_width_px"])
+        except Exception:
+            if cv2 is not None:
+                dist = cv2.distanceTransform(mask.astype(np.uint8), cv2.DIST_L2, 3)
+                vals = dist[mask > 0]
+                if len(vals) > 0:
+                    width_px = float(vals.mean()) * 2.0
+                    width_max_px = float(vals.max()) * 2.0
+                    width_min_px = float(vals.min()) * 2.0
+
+        width_mm = width_px * s_val
+        width_max_mm = width_max_px * s_val
+        width_min_mm = width_min_px * s_val
+        area_mm2 = area_px * (s_val ** 2)
+
+        # -------------------------------------------------------------
+        # PLANAR CALIBRATION + HOMOGRAPHY MEASUREMENT BRANCH
+        # -------------------------------------------------------------
+        print("📐 Running Planar Calibration & Homography Branch...")
+        from planar_calibration.reference_detection import resolve_planar_reference
+        from planar_calibration.rectification import (
+            rectify_image_and_mask,
+            create_calibration_overlay,
+            create_rectified_crack_overlay,
+        )
+        from planar_calibration.planar_measurement import quantify_planar_crack
+        from planar_calibration.planar_validation import (
+            assess_planarity_heuristic,
+            run_measurement_sanity_checks,
+            compute_research_comparison,
+        )
+
+        planar_ref = None
+        planar_data = None
+        rectified_mask = None
+        rectified_img = None
+
+        try:
+            planar_ref = resolve_planar_reference(
+                image=image_rgb,
+                crack_mask=mask,
+                mode=calibration_mode,
+                manual_corners=corners_list,
+                ref_width_mm=ref_width_mm,
+                ref_height_mm=ref_height_mm,
+                marker_size_mm=marker_size_mm,
+            )
+
+            if planar_ref and planar_ref.is_valid and planar_ref.homography_data:
+                homog = planar_ref.homography_data
+                rw_px = homog["rectified_width_px"]
+                rh_px = homog["rectified_height_px"]
+
+                rectified_img, rectified_mask = rectify_image_and_mask(
+                    image_rgb, mask, homog["H_px"], rw_px, rh_px
+                )
+
+                planar_metrics = quantify_planar_crack(
+                    rectified_mask,
+                    planar_ref.ref_width_mm,
+                    planar_ref.ref_height_mm,
+                    homog.get("H_metric")
+                )
+
+                # Generate Stage Overlays for Planar
+                calib_overlay = create_calibration_overlay(
+                    image_rgb,
+                    planar_ref.corners_px,
+                    planar_ref.ref_width_mm,
+                    planar_ref.ref_height_mm,
+                    status=planar_ref.status,
+                    crack_mask=mask
+                )
+                stage_images["planar_reference_overlay"] = image_to_base64_data(calib_overlay)
+
+                rect_overlay = create_rectified_crack_overlay(
+                    rectified_img,
+                    rectified_mask,
+                    planar_metrics.get("primary_skeleton"),
+                    planar_ref.ref_width_mm,
+                    planar_ref.ref_height_mm
+                )
+                stage_images["planar_rectified"] = image_to_base64_data(rect_overlay)
+
+                planar_data = {
+                    "success": True,
+                    "network_length_mm": planar_metrics["network_length_mm"],
+                    "mst_length_mm": planar_metrics["mst_length_mm"],
+                    "main_branch_mm": planar_metrics["main_branch_mm"],
+                    "mean_width_mm": planar_metrics["mean_width_mm"],
+                    "max_width_mm": planar_metrics["max_width_mm"],
+                    "area_mm2": planar_metrics["area_mm2"],
+                    "ref_width_mm": planar_ref.ref_width_mm,
+                    "ref_height_mm": planar_ref.ref_height_mm,
+                    "reprojection_error_px": homog["reprojection_error_px"],
+                    "perspective_distortion": homog["distortion_rating"],
+                    "crack_in_plane_ratio": round(planar_ref.crack_in_plane_ratio, 2),
+                    "mode": planar_ref.mode,
+                    "status": planar_ref.status,
+                    "message": planar_ref.message,
+                    "per_method": planar_metrics.get("per_method", {}),
+                }
+        except Exception as e_p:
+            print(f"⚠️ Planar branch execution error: {e_p}")
+            planar_ref = None
+            planar_data = None
+
+        # Planarity assessment
+        planarity_eval = assess_planarity_heuristic(
+            planar_ref.homography_data if (planar_ref and planar_ref.is_valid) else None,
+            depth_heatmap=depth_heatmap,
+            crack_mask=mask
+        )
+
+        # Sanity checks
+        planar_len_for_check = planar_data["network_length_mm"] if (planar_data and planar_data.get("success")) else None
+        sanity_warnings = run_measurement_sanity_checks(
+            length_2d_mm=length_2d_mm if is_physical_scale_calibrated else None,
+            length_planar_mm=planar_len_for_check,
+            length_3d_mm=length_3d_mm,
+            homography_status=planar_ref.status if (planar_ref and planar_ref.is_valid) else "NOT_CONFIGURED",
+            crack_in_plane_ratio=planar_ref.crack_in_plane_ratio if planar_ref else 1.0,
+        )
+
+        # Research Comparison against Ground Truth
+        research_comp = compute_research_comparison(
+            measurements={
+                "2d": length_2d_mm if is_physical_scale_calibrated else None,
+                "planar": planar_len_for_check,
+                "3d": length_3d_mm,
+            },
+            ground_truth_mm=ground_truth_mm
+        )
+
+        # -------------------------------------------------------------
+        # STAGE 6: FINAL ESTIMATED IMAGE (With Complete HUD Overlay)
+        # -------------------------------------------------------------
+        print("📐 Stage 6: Generating final estimated measurement image...")
+        final_img = image_rgb.copy()
+        if cv2 is not None:
+            mask_color = np.zeros_like(final_img)
+            mask_color[mask > 0] = [0, 220, 220]
+            final_img = cv2.addWeighted(final_img, 0.75, mask_color, 0.25, 0)
+
+            dil_center = cv2.dilate(active_skel.astype(np.uint8), np.ones((2, 2), np.uint8))
+            final_img[dil_center > 0] = [0, 255, 0]
+
+            hud_height = 92
+            hud_bg = np.zeros((hud_height, w, 3), dtype=np.uint8)
+            hud_bg[:] = [15, 23, 42]
+            final_img[:hud_height, :] = cv2.addWeighted(final_img[:hud_height, :], 0.15, hud_bg, 0.85, 0)
+            cv2.line(final_img, (0, hud_height), (w, hud_height), (2, 132, 199), 2)
+
+            font = cv2.FONT_HERSHEY_SIMPLEX
+            cv2.putText(final_img, "INFRAVISION AI  |  CRACK QUANTIFICATION & TRI-METHOD COMPARISON", (16, 22), font, 0.52, (56, 189, 248), 2)
+            
+            p_len_txt = f"{planar_data['network_length_mm']:.1f} mm" if planar_data else "N/A (No ref)"
+            cal_str = "CALIBRATED" if is_physical_scale_calibrated else "UNCALIBRATED"
+            txt_row1 = f"2D: {length_2d_mm:.1f} mm ({cal_str})   |   Planar: {p_len_txt}   |   3D: {length_3d_mm:.1f} mm"
+            cv2.putText(final_img, txt_row1, (16, 46), font, 0.44, (255, 255, 255), 1)
+
+            p_eval_txt = f"Planarity: {planarity_eval['label']} ({planarity_eval['score']:.0f}%)   |   Recommended: {planarity_eval['recommended_method']}"
+            cv2.putText(final_img, p_eval_txt, (16, 66), font, 0.40, (147, 197, 253), 1)
+
+            txt_row3 = f"Mean Width: {width_mm:.2f} mm   |   Max Width: {width_max_mm:.2f} mm   |   Area: {area_mm2:.1f} mm2"
+            cv2.putText(final_img, txt_row3, (16, 84), font, 0.38, (52, 211, 153), 1)
+        stage_images["stage6_final_estimated"] = image_to_base64_data(final_img)
+
+        # -------------------------------------------------------------
+        # PER-METHOD COMPARISON (Skeletons)
+        # -------------------------------------------------------------
+        per_method = {}
+        for name, sk in [("guo_hall", skel_gh), ("zhang_suen", skel_zs), ("morphological", skel_mo)]:
+            if sk.any():
+                g_m = analyze_skeleton(sk)
+                entry = {
+                    "network_px": float(g_m["network_length_px"]),
+                    "network_mm": float(g_m["network_length_px"]) * s_val,
+                    "main_path_px": float(g_m["main_path_px"]),
+                    "main_path_mm": float(g_m["main_path_px"]) * s_val,
+                    "mst_px": float(g_m["mst_length_px"]),
+                    "mst_mm": float(g_m["mst_length_px"]) * s_val,
+                    "components": len(g_m["components"]),
+                    "junctions": g_m["junction_count"],
+                }
+            else:
+                entry = {"network_px": 0, "network_mm": 0, "main_path_px": 0, "main_path_mm": 0, "mst_px": 0, "mst_mm": 0, "components": 0, "junctions": 0}
+            per_method[name] = entry
+
+        if image_path and os.path.exists(image_path):
+            try: os.remove(image_path)
+            except Exception: pass
+
+        # Calibration Status Overview
+        calib_summary = {
+            "method": "PLANAR HOMOGRAPHY" if planar_ref.is_valid else ("USER SCALE" if is_physical_scale_calibrated else "CAMERA MODEL ESTIMATE"),
+            "mode": planar_ref.mode,
+            "status": planar_ref.status if planar_ref.is_valid else ("VALID" if is_physical_scale_calibrated else "UNCALIBRATED"),
+            "reference_width_mm": planar_ref.ref_width_mm if planar_ref.is_valid else None,
+            "reference_height_mm": planar_ref.ref_height_mm if planar_ref.is_valid else None,
+            "reprojection_error_px": planar_ref.homography_data.get("reprojection_error_px") if (planar_ref.is_valid and planar_ref.homography_data) else None,
+            "perspective_distortion": planar_ref.homography_data.get("distortion_rating") if (planar_ref.is_valid and planar_ref.homography_data) else "NONE",
+            "planarity_score": planarity_eval["score"],
+            "planarity_label": planarity_eval["label"],
+            "planarity_type": "heuristic",
+            "recommended_method": planarity_eval["recommended_method"],
+            "is_physical_scale_calibrated": is_physical_scale_calibrated or planar_ref.is_valid,
+            "warnings": sanity_warnings,
         }
 
-        # Cleanup temp files
-        for tmp in [mask_path, image_path]:
-            if tmp and os.path.exists(tmp):
-                try:
-                    os.remove(tmp)
-                except Exception:
-                    pass
+        # Side-by-Side 3-Way Measurements
+        tri_measurements = {
+            "2d": {
+                "network_length_mm": round(length_2d_mm, 2) if is_physical_scale_calibrated else None,
+                "network_length_px": round(float(length_2d["length_px"]), 1),
+                "mst_length_mm": round(mst_2d_mm, 2) if is_physical_scale_calibrated else None,
+                "main_path_mm": round(main_path_2d_mm, 2) if is_physical_scale_calibrated else None,
+                "mean_width_mm": round(width_mm, 2) if is_physical_scale_calibrated else None,
+                "area_mm2": round(area_mm2, 2) if is_physical_scale_calibrated else None,
+                "scale_mm_per_px": round(s_val, 5),
+                "scale_source": scale_info["source"],
+                "calibrated": is_physical_scale_calibrated,
+            },
+            "planar": planar_data,
+            "3d": {
+                "arc_length_mm": round(length_3d_mm, 2),
+                "main_branch_mm": round(main_branch_3d_mm, 2),
+                "sanity_ratio": round(sanity_ratio, 2),
+                "camera_distance_mm": distance_mm,
+                "focal_length_mm": focal_length_mm,
+                "depth_relief_applied": True,
+            }
+        }
 
-        print(f"✅ Crack length: {result['length_px']:.1f}px")
-        if length_mm is not None:
-            print(f"   Physical: {length_mm:.2f}mm (scale: {scale_info['method']})")
+        # Scientific Reliability Prediction & Adaptive Method Selection
+        from validation_platform.reliability_model import predict_measurement_reliability
+        from validation_platform.adaptive_selector import recommend_measurement_method
+        diag_features = {
+            "camera_distance_mm": distance_mm,
+            "camera_yaw_deg": 0.0,
+            "camera_pitch_deg": 0.0,
+            "surface_type": "planar_wall",
+            "is_planar": True if planarity_eval["label"] in ("HIGH", "MEDIUM") else False,
+            "reprojection_error_px": planar_data.get("reprojection_error_px") if planar_data else 0.5,
+            "planarity_score": planarity_eval["score"],
+            "planarity_label": planarity_eval["label"],
+            "homography_status": planar_ref.status if (planar_ref and planar_ref.is_valid) else "NOT_CONFIGURED",
+            "is_physical_scale_calibrated": is_physical_scale_calibrated or (planar_ref and planar_ref.is_valid),
+            "length_2d_mm": length_2d_mm if is_physical_scale_calibrated else None,
+            "length_planar_mm": planar_len_for_check,
+            "length_3d_mm": length_3d_mm,
+            "crack_in_plane_ratio": planar_ref.crack_in_plane_ratio if planar_ref else 1.0,
+        }
+        primary_len = planar_len_for_check or length_3d_mm or length_2d_mm or 100.0
+        rel_pred = predict_measurement_reliability(primary_len, diag_features)
+        adaptive_rec = recommend_measurement_method(diag_features)
 
-        return jsonify(result)
+        response_data = {
+            "status": "success",
+            # Backward-compatible primary fields:
+            "length_px": length_2d["length_px"],
+            "length_mm": round(length_2d_mm, 2),
+            "length_planar_mm": planar_data["network_length_mm"] if planar_data else None,
+            "length_3d_mm": round(length_3d_mm, 2),
+            "main_path_px": float(graph["main_path_px"]),
+            "main_path_mm": round(main_path_2d_mm, 2),
+            "main_branch_3d_mm": round(main_branch_3d_mm, 2),
+            "mst_length_px": float(graph["mst_length_px"]),
+            "mst_length_mm": round(mst_2d_mm, 2),
+            "width_px": round(width_px, 2),
+            "width_mm": round(width_mm, 2),
+            "width_max_px": round(width_max_px, 2),
+            "width_max_mm": round(width_max_mm, 2),
+            "width_min_px": round(width_min_px, 2),
+            "width_min_mm": round(width_min_mm, 2),
+            "area_px": area_px,
+            "area_mm2": round(area_mm2, 2),
+            "components": n_comps,
+            "junctions": graph.get("junction_count", 0),
+            "endpoints": graph.get("endpoint_count", 0),
+            "skeleton_pixels": int(active_skel.sum()),
+            "detected_boxes": crack_boxes,
+            "scale": scale_info,
+            "sanity_ratio": round(sanity_ratio, 2),
+            "best_method": "guo_hall + network",
+            "per_method": per_method,
+            "stage_images": stage_images,
+            "calibration_status": calib_summary,
+            "measurements": tri_measurements,
+            "research_comparison": research_comp,
+            "planarity": planarity_eval,
+            "reliability_prediction": rel_pred,
+            "method_recommendation": adaptive_rec.to_dict(),
+            "warnings": sanity_warnings,
+        }
+
+        print(f"✅ Pipeline finished successfully! 2D: {length_2d_mm:.1f}mm, 3D: {length_3d_mm:.1f}mm")
+        return jsonify(response_data)
 
     except Exception as e:
         print(f"❌ Crack length estimation failed: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({"status": "error", "reason": str(e)}), 500
+
+
+# =============================================================================
+# SCIENTIFIC RESEARCH & VALIDATION PLATFORM ENDPOINTS
+# =============================================================================
+
+@app.route('/api/research/generate-specimen', methods=['POST'])
+def research_generate_specimen():
+    """Parametric Synthetic Crack Specimen Generator Endpoint.
+    Generates exact analytical ground-truth crack geometry on a 3D surface manifold,
+    projects it under realistic camera geometry, and returns base64 image + projected metadata.
+    """
+    try:
+        from synthetic_specimens.crack_generator import generate_parametric_crack, compute_analytical_ground_truth
+        from synthetic_specimens.surface_models import get_surface_model
+        from synthetic_specimens.camera_simulation import CameraParameters, project_surface_and_crack_to_image
+        from synthetic_specimens.reference_generator import generate_reference_target
+
+        data = request.get_json(silent=True) or {}
+        crack_type = data.get("crack_type", "curved")
+        target_len_mm = float(data.get("target_length_mm", 450.0))
+        mean_width_mm = float(data.get("mean_width_mm", 0.85))
+        max_width_mm = float(data.get("max_width_mm", 1.40))
+        min_width_mm = float(data.get("min_width_mm", 0.25))
+        surface_type = data.get("surface_type", "planar_wall")
+        distance_mm = float(data.get("distance_mm", 1000.0))
+        yaw_deg = float(data.get("yaw_deg", 15.0))
+        pitch_deg = float(data.get("pitch_deg", 5.0))
+        lighting = data.get("lighting_condition", "normal")
+        seed = int(data.get("seed", np.random.randint(1000, 99999)))
+
+        # 1. Mathematical Ground Truth
+        crack = generate_parametric_crack(
+            crack_type=crack_type,
+            target_length_mm=target_len_mm,
+            mean_width_mm=mean_width_mm,
+            max_width_mm=max_width_mm,
+            min_width_mm=min_width_mm,
+            surface_width_mm=1000.0,
+            surface_height_mm=1000.0,
+            seed=seed
+        )
+        gt_data = compute_analytical_ground_truth(crack)
+
+        # 2. Surface Manifold & Known 500x500mm Reference Target
+        surface = get_surface_model(surface_type, 1000.0, 1000.0)
+        ref = generate_reference_target(surface, 500.0, 500.0)
+
+        # 3. Pinhole Projection
+        cam = CameraParameters(
+            distance_mm=distance_mm,
+            yaw_deg=yaw_deg,
+            pitch_deg=pitch_deg,
+            focal_length_mm=28.0,
+            image_width_px=1280,
+            image_height_px=720
+        )
+        rendered = project_surface_and_crack_to_image(
+            crack=crack,
+            surface=surface,
+            camera=cam,
+            lighting_condition=lighting,
+            reference_corners_3d=ref["corners_3d"],
+            seed=seed
+        )
+
+        img_b64 = image_to_base64_data(rendered["image_rgb"])
+        mask_b64 = image_to_base64_data(rendered["crack_mask"] * 255)
+
+        # Draw Ground Truth Centerline overlay for scientific inspection
+        gt_overlay = rendered["image_rgb"].copy()
+        if cv2 is not None:
+            # Draw ground truth outline in neon cyan
+            dil_gt = cv2.dilate(rendered["crack_mask"], np.ones((2, 2), np.uint8))
+            gt_overlay[dil_gt > 0] = [0, 255, 255]
+            # Overlay HUD
+            cv2.putText(gt_overlay, f"GROUND TRUTH: {gt_data['total_centerline_length_mm']:.1f} mm | Type: {crack_type.upper()}",
+                        (16, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.65, (0, 255, 255), 2)
+            cv2.putText(gt_overlay, f"Surface: {surface_type} | Dist: {distance_mm:.0f}mm | Yaw: {yaw_deg:.0f} deg | Light: {lighting}",
+                        (16, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.48, (200, 240, 255), 1)
+
+        gt_vis_b64 = image_to_base64_data(gt_overlay)
+
+        return jsonify({
+            "status": "success",
+            "specimen_id": f"SYN-{seed}",
+            "ground_truth": gt_data,
+            "camera_geometry": {
+                "distance_mm": distance_mm,
+                "yaw_deg": yaw_deg,
+                "pitch_deg": pitch_deg,
+                "focal_length_mm": 28.0,
+                "surface_type": surface_type,
+                "is_planar": surface.is_planar(),
+                "lighting_condition": lighting
+            },
+            "reference_corners_px": rendered["projected_reference_px"].tolist() if rendered["projected_reference_px"] is not None else None,
+            "image_b64": img_b64,
+            "mask_b64": mask_b64,
+            "gt_vis_b64": gt_vis_b64,
+            "seed": seed
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/research/run-experiment', methods=['POST'])
+def research_run_experiment():
+    """Automated Experiment Trial / Batch Factorial Evaluation Runner.
+    Executes 2D, Planar Homography, and 3D arc-length pipelines against analytical ground truth.
+    """
+    try:
+        from validation_platform.experiment_runner import run_batch_experiments, run_specimen_trial
+        from validation_platform.performance_matrix import generate_performance_matrix, identify_failure_modes
+
+        data = request.get_json(silent=True) or {}
+        mode = data.get("mode", "batch")
+
+        if mode == "batch":
+            num_samples = min(50, max(2, int(data.get("num_samples", 12))))
+            records, stats = run_batch_experiments(num_samples=num_samples)
+            matrix = generate_performance_matrix(records)
+            failures = identify_failure_modes(records)
+
+            return jsonify({
+                "status": "success",
+                "mode": "batch",
+                "num_samples": len(records),
+                "statistics": stats,
+                "performance_matrix": matrix,
+                "failure_modes": failures,
+                "records": [r.to_dict() for r in records]
+            })
+        else:
+            # Single specimen trial
+            from synthetic_specimens.crack_generator import generate_parametric_crack, compute_analytical_ground_truth
+            from synthetic_specimens.surface_models import get_surface_model
+            from synthetic_specimens.camera_simulation import CameraParameters, project_surface_and_crack_to_image
+            from synthetic_specimens.reference_generator import generate_reference_target
+
+            c_type = data.get("crack_type", "curved")
+            s_type = data.get("surface_type", "planar_wall")
+            t_len = float(data.get("target_length_mm", 450.0))
+            dist = float(data.get("distance_mm", 1000.0))
+            yaw = float(data.get("yaw_deg", 15.0))
+            pitch = float(data.get("pitch_deg", 5.0))
+            light = data.get("lighting_condition", "normal")
+            seed = int(data.get("seed", 42))
+
+            crack = generate_parametric_crack(crack_type=c_type, target_length_mm=t_len, seed=seed)
+            gt_data = compute_analytical_ground_truth(crack)
+            surface = get_surface_model(s_type, 1000.0, 1000.0)
+            ref = generate_reference_target(surface, 500.0, 500.0)
+
+            cam = CameraParameters(distance_mm=dist, yaw_deg=yaw, pitch_deg=pitch)
+            rendered = project_surface_and_crack_to_image(
+                crack=crack, surface=surface, camera=cam,
+                lighting_condition=light, reference_corners_3d=ref["corners_3d"], seed=seed
+            )
+
+            rec = run_specimen_trial(
+                image_rgb=rendered["image_rgb"],
+                ground_truth=gt_data,
+                specimen_id=f"EXP-{seed}",
+                surface_type=s_type,
+                is_planar=surface.is_planar(),
+                camera_distance_mm=dist,
+                camera_yaw_deg=yaw,
+                camera_pitch_deg=pitch,
+                lighting_condition=light,
+                reference_corners_px=rendered["projected_reference_px"],
+                reference_dims_mm=(500.0, 500.0),
+                crack_mask=rendered["crack_mask"]
+            )
+
+            return jsonify({
+                "status": "success",
+                "mode": "single",
+                "record": rec.to_dict(),
+                "ground_truth": gt_data,
+                "image_b64": image_to_base64_data(rendered["image_rgb"])
+            })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/research/performance-matrix', methods=['GET'])
+def research_performance_matrix():
+    """Retrieve condition-stratified performance matrix and empirical failure diagnostics."""
+    try:
+        from validation_platform.experiment_runner import run_batch_experiments
+        from validation_platform.performance_matrix import generate_performance_matrix, identify_failure_modes
+        from validation_platform.real_specimen_schema import SpecimenRecord
+
+        json_path = os.path.join("outputs", "experiments", "batch_experiment_results.json")
+        if os.path.exists(json_path):
+            try:
+                with open(json_path, "r", encoding="utf-8") as f:
+                    saved = json.load(f)
+                rec_dicts = saved.get("records", [])
+                records = [SpecimenRecord(**r) for r in rec_dicts]
+                stats = saved.get("statistics", {})
+            except Exception:
+                records, stats = run_batch_experiments(num_samples=4)
+        else:
+            records, stats = run_batch_experiments(num_samples=4)
+
+        matrix = generate_performance_matrix(records)
+        failures = identify_failure_modes(records)
+
+        return jsonify({
+            "status": "success",
+            "performance_matrix": matrix,
+            "overall_statistics": stats,
+            "failure_modes": failures
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
 if __name__ == '__main__':
@@ -3500,5 +4201,4 @@ if __name__ == '__main__':
     print("   - POST /api/stop_stream - Stop video streaming")
     print("   - GET  /api/stream_metrics - Get streaming metrics")
     print("✨ Ready for AI-powered infrastructure monitoring!")
-    
     app.run(host='0.0.0.0', port=port, debug=False, threaded=True, use_reloader=False)

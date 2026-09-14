@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantitative Crack Measurement & Scientific Validation Platform | InfraVision AI</title>
+    <style>
+        :root {
+            --primary: #0284c7;
+            --primary-glow: rgba(2, 132, 199, 0.35);
+            --accent: #10b981;
+            --accent-glow: rgba(16, 185, 129, 0.3);
+            --purple: #a855f7;
+            --purple-glow: rgba(168, 85, 247, 0.3);
+            --amber: #f59e0b;
+            --rose: #f43f5e;
+            --bg: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.88);
+            --border: rgba(148, 163, 184, 0.16);
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: radial-gradient(circle at top, #1e293b 0%, #0f172a 100%); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { text-align: center; margin-bottom: 1.8rem; }
+        .badge { display: inline-block; background: rgba(2, 132, 199, 0.2); border: 1px solid var(--primary); color: #38bdf8; font-size: 0.82rem; font-weight: 600; padding: 0.35rem 0.9rem; border-radius: 9999px; margin-bottom: 0.8rem; letter-spacing: 0.03em; }
+        h1 { font-size: 2.35rem; font-weight: 800; background: linear-gradient(135deg, #38bdf8, #818cf8, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.4rem; }
+        .subtitle { color: var(--text-muted); font-size: 1.05rem; }
+        
+        /* Main Mode Switcher */
+        .mode-switcher { display: flex; justify-content: center; gap: 0.75rem; margin-bottom: 1.8rem; }
+        .mode-btn { background: rgba(30, 41, 59, 0.75); border: 1.5px solid #334155; color: var(--text-muted); font-size: 1rem; font-weight: 700; padding: 0.8rem 1.6rem; border-radius: 12px; cursor: pointer; transition: all 0.25s; display: flex; align-items: center; gap: 0.5rem; }
+        .mode-btn:hover { border-color: #38bdf8; color: #f8fafc; transform: translateY(-1px); }
+        .mode-btn.active { background: linear-gradient(135deg, rgba(2, 132, 199, 0.25), rgba(124, 58, 237, 0.25)); border-color: #38bdf8; color: #38bdf8; box-shadow: 0 0 20px rgba(2, 132, 199, 0.25); }
+
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 1.8rem; backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); margin-bottom: 1.5rem; }
+        
+        .dropzone { border: 2.5px dashed #475569; border-radius: 14px; padding: 2.2rem 1.5rem; text-align: center; cursor: pointer; transition: all 0.25s; background: rgba(15, 23, 42, 0.5); }
+        .dropzone:hover { border-color: #38bdf8; background: rgba(2, 132, 199, 0.08); transform: translateY(-1px); }
+        .dropzone input { display: none; }
+        .dropzone-icon { width: 50px; height: 50px; margin: 0 auto 0.6rem; display: block; color: #38bdf8; }
+        .dropzone-title { font-size: 1.2rem; font-weight: 700; color: #f8fafc; }
+        .dropzone-label { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.3rem; }
+        .file-name { font-weight: 600; color: #38bdf8; margin-top: 0.8rem; word-break: break-all; }
+        
+        /* Interactive 4-point Canvas Preview */
+        .preview-container { margin: 1.2rem auto 0; max-width: 680px; position: relative; display: none; border-radius: 10px; overflow: hidden; border: 1.5px solid #334155; background: #000; }
+        .preview-wrapper { position: relative; width: 100%; display: flex; justify-content: center; }
+        #canvas-preview { max-width: 100%; max-height: 420px; object-fit: contain; cursor: crosshair; display: block; }
+        .canvas-hint { padding: 0.6rem 1rem; background: rgba(15, 23, 42, 0.9); font-size: 0.82rem; color: #94a3b8; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #334155; }
+        
+        /* Tabs for Settings */
+        .tab-bar { display: flex; gap: 0.5rem; border-bottom: 1px solid #334155; margin: 1.5rem 0 1rem; padding-bottom: 0.5rem; }
+        .tab-btn { background: transparent; border: none; color: var(--text-muted); font-size: 0.92rem; font-weight: 600; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .tab-btn.active { background: rgba(2, 132, 199, 0.2); color: #38bdf8; border: 1px solid rgba(2, 132, 199, 0.4); }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+        @media(max-width: 768px) { .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; } }
+
+        .form-group { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 0.5rem; }
+        label { font-size: 0.82rem; font-weight: 600; color: #cbd5e1; }
+        input[type="number"], input[type="text"], select { background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: var(--text); padding: 0.65rem 0.85rem; font-size: 0.92rem; outline: none; }
+        input:focus, select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.25); }
+
+        .btn { background: linear-gradient(135deg, #0284c7, #2563eb, #7c3aed); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 1.05rem; font-weight: 700; padding: 0.95rem 1.5rem; width: 100%; margin-top: 1.4rem; transition: all 0.2s; box-shadow: 0 4px 16px rgba(2, 132, 199, 0.35); }
+        .btn:hover { opacity: 0.93; transform: translateY(-1px); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-secondary { background: rgba(51, 65, 85, 0.7); border: 1px solid #475569; padding: 0.45rem 0.9rem; font-size: 0.82rem; border-radius: 6px; color: #f8fafc; cursor: pointer; transition: all 0.2s; }
+        .btn-secondary:hover { background: #475569; }
+        .btn-accent { background: linear-gradient(135deg, #059669, #10b981); border: none; border-radius: 10px; color: white; cursor: pointer; font-size: 1rem; font-weight: 700; padding: 0.85rem 1.4rem; transition: all 0.2s; box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3); }
+        .btn-accent:hover { opacity: 0.92; transform: translateY(-1px); }
+
+        /* Calibration Status Header Box */
+        .calib-status-card { background: rgba(15, 23, 42, 0.9); border: 1.5px solid #0284c7; border-radius: 14px; padding: 1.4rem; margin-bottom: 1.5rem; box-shadow: 0 0 20px rgba(2, 132, 199, 0.15); }
+        .calib-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 0.8rem; margin-bottom: 1rem; }
+        .calib-title { font-size: 1.05rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem; }
+        .calib-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; }
+        .calib-item-label { font-size: 0.74rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
+        .calib-item-val { font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-top: 0.2rem; }
+
+        /* Tri-Method Side-by-Side Cards */
+        .tri-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1rem; }
+        @media(max-width: 900px) { .tri-grid { grid-template-columns: 1fr; } }
+        
+        .method-card { background: rgba(15, 23, 42, 0.75); border: 1.5px solid #334155; border-radius: 14px; padding: 1.4rem; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.25s; }
+        .method-card:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.4); }
+        .method-card.hero { border-color: #10b981; background: rgba(16, 185, 129, 0.06); box-shadow: 0 0 25px rgba(16, 185, 129, 0.15); }
+        .method-card.hero::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #38bdf8); }
+        .method-card.blue::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #0284c7; }
+        .method-card.purple::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #a855f7; }
+
+        .method-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+        .method-tag { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; padding: 0.25rem 0.6rem; border-radius: 9999px; }
+        .tag-green { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .tag-blue { background: rgba(2, 132, 199, 0.2); color: #38bdf8; border: 1px solid rgba(2, 132, 199, 0.3); }
+        .tag-purple { background: rgba(168, 85, 247, 0.2); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        
+        .method-main-val { font-size: 2.1rem; font-weight: 800; color: #f8fafc; line-height: 1.1; margin: 0.3rem 0; }
+        .method-sub-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem; }
+        
+        .method-metrics { border-top: 1px solid #334155; padding-top: 0.8rem; display: flex; flex-direction: column; gap: 0.45rem; font-size: 0.85rem; }
+        .metric-row { display: flex; justify-content: space-between; color: #cbd5e1; }
+        .metric-row span:first-child { color: var(--text-muted); }
+
+        /* Sanity Alert Banner */
+        .alert-banner { background: rgba(245, 158, 11, 0.12); border: 1.5px solid #f59e0b; border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; display: none; }
+        .alert-title { font-weight: 700; color: #fbbf24; font-size: 0.95rem; margin-bottom: 0.2rem; display: flex; align-items: center; gap: 0.4rem; }
+        .alert-body { font-size: 0.88rem; color: #fde68a; line-height: 1.4; }
+
+        /* Stage Gallery */
+        .stage-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-top: 1.5rem; }
+        .stage-card { background: rgba(15, 23, 42, 0.75); border: 1px solid #334155; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: all 0.2s; cursor: pointer; }
+        .stage-card:hover { transform: translateY(-3px); border-color: #38bdf8; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
+        .stage-card-header { padding: 0.7rem 0.9rem; background: rgba(30, 41, 59, 0.7); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .stage-card-title { font-size: 0.85rem; font-weight: 700; color: #f8fafc; }
+        .stage-img-wrap { height: 190px; background: #000; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .stage-img-wrap img { width: 100%; height: 100%; object-fit: contain; }
+        .stage-desc { padding: 0.65rem 0.9rem; font-size: 0.78rem; color: #94a3b8; line-height: 1.4; border-top: 1px solid rgba(51, 65, 85, 0.5); }
+
+        /* Hero Image */
+        .hero-stage-card { background: rgba(15, 23, 42, 0.85); border: 1.5px solid #0284c7; border-radius: 14px; overflow: hidden; margin-top: 1.5rem; }
+        .hero-stage-header { padding: 1rem 1.25rem; background: linear-gradient(90deg, rgba(2, 132, 199, 0.25), rgba(124, 58, 237, 0.25)); border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
+        .hero-img-wrap { max-height: 480px; background: #0b0f19; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .hero-img-wrap img { width: 100%; height: auto; max-height: 480px; object-fit: contain; display: block; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; font-size: 0.92rem; }
+        th, td { padding: 0.8rem 1rem; text-align: left; border-bottom: 1px solid #334155; }
+        th { color: var(--text-muted); font-weight: 600; background: rgba(15, 23, 42, 0.5); }
+        tr:hover { background: rgba(51, 65, 85, 0.3); }
+
+        .loading { display: none; text-align: center; padding: 2.5rem; color: #38bdf8; font-size: 1.15rem; }
+        .spinner { border: 3.5px solid rgba(56, 189, 248, 0.2); border-top: 3.5px solid #38bdf8; border-radius: 50%; width: 44px; height: 44px; animation: spin 0.8s linear infinite; margin: 0 auto 1rem; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .lightbox { display: none; position: fixed; z-index: 1000; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); backdrop-filter: blur(8px); align-items: center; justify-content: center; padding: 2rem; cursor: zoom-out; }
+        .lightbox img { max-width: 95%; max-height: 95%; border-radius: 8px; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
+
+        /* Stat Badge Box */
+        .stat-badge-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1rem 0; }
+        .stat-badge-box { background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; border-radius: 12px; padding: 1rem; }
+        .stat-badge-title { font-size: 0.74rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.04em; }
+        .stat-badge-val { font-size: 1.5rem; font-weight: 800; color: #f8fafc; margin-top: 0.25rem; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <span class="badge">InfraVision AI • Scientific Crack Quantification & Validation Platform</span>
+        <h1>Physical Crack Measurement & Calibration</h1>
+        <p class="subtitle">Tri-Method Benchmark: 2D Pixel Scale vs. Planar Homography vs. 3D Surface Arc-Length</p>
+    </div>
+
+    <!-- Mode Selector Tabs -->
+    <div class="mode-switcher">
+        <button class="mode-btn active" id="btn-mode-field" onclick="switchMainMode('field')">
+            📸 Field Photo Measurement
+        </button>
+        <button class="mode-btn" id="btn-mode-research" onclick="switchMainMode('research')">
+            🔬 Synthetic Research & Validation Studio
+        </button>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 1: FIELD PHOTO MEASUREMENT                                 -->
+    <!-- ================================================================= -->
+    <div id="section-field">
+        <div class="card">
+            <h2 style="font-size: 1.25rem; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📸</span> 1. Raw Infrastructure Image
+            </h2>
+            
+            <div class="dropzone" id="dropzone-box" onclick="document.getElementById('image-file').click()">
+                <svg class="dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <div class="dropzone-title">Click or Drag & Drop Raw Crack Photograph Here</div>
+                <p class="dropzone-label">Accepts raw uncropped photos. Detection, segmentation, and skeletonization run automatically.</p>
+                <div id="file-name" class="file-name"></div>
+                <input type="file" id="image-file" accept="image/*" onchange="imageSelected(this)">
+            </div>
+
+            <!-- Interactive 4-Point Canvas Setup -->
+            <div class="preview-container" id="preview-container">
+                <div class="preview-wrapper">
+                    <canvas id="canvas-preview"></canvas>
+                </div>
+                <div class="canvas-hint">
+                    <span id="canvas-status">💡 Click 4 corner points on image to calibrate plane (TL → TR → BR → BL)</span>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="btn-secondary" onclick="autoSetCorners()">Auto 4 Corners</button>
+                        <button type="button" class="btn-secondary" onclick="clearCorners()">Reset Points</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calibration & Parameters Tab Selector -->
+            <div class="tab-bar">
+                <button type="button" class="tab-btn active" onclick="switchTab('tab-planar')">📐 Planar Homography Calibration</button>
+                <button type="button" class="tab-btn" onclick="switchTab('tab-3d')">🌐 3D Camera Parameters</button>
+                <button type="button" class="tab-btn" onclick="switchTab('tab-2d')">📏 2D Scale</button>
+                <button type="button" class="tab-btn" onclick="switchTab('tab-research')">🎯 Research Ground Truth</button>
+            </div>
+
+            <!-- Tab 1: Planar Calibration -->
+            <div class="tab-content active" id="tab-planar">
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label>Calibration Mode</label>
+                        <select id="calib-mode-select" onchange="onCalibModeChange()">
+                            <option value="manual_4point">Manual 4-Point Region</option>
+                            <option value="marker_aruco">Automatic Marker (ArUco / AprilTag)</option>
+                            <option value="none">None (2D & 3D Only)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Reference Width (mm)</label>
+                        <input type="number" id="ref-w-input" placeholder="e.g. 500 mm" value="500" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>Reference Height (mm)</label>
+                        <input type="number" id="ref-h-input" placeholder="e.g. 500 mm" value="500" step="any">
+                    </div>
+                </div>
+                <div style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.6rem;">
+                    Points Selected: <span id="pts-count-lbl" style="font-weight: 700; color: #38bdf8;">0 of 4</span> (Click directly on the image preview above)
+                </div>
+            </div>
+
+            <!-- Tab 2: 3D Camera -->
+            <div class="tab-content" id="tab-3d">
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label>Camera Working Distance (mm)</label>
+                        <input type="number" id="distance-input" placeholder="1000 mm (1.0 m)" value="1000" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>Focal Length (mm)</label>
+                        <input type="number" id="focal-input" placeholder="28 mm" value="28" step="any">
+                    </div>
+                    <div class="form-group">
+                        <label>Sensor Width (mm)</label>
+                        <input type="number" id="sensor-input" placeholder="36 mm (Full Frame)" value="36" step="any">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: 2D Scale -->
+            <div class="tab-content" id="tab-2d">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Known Scale (mm/px, Optional)</label>
+                        <input type="number" id="scale-input" placeholder="Leave blank if unknown" step="any">
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); align-self: center; margin-top: 1rem;">
+                        ⚠️ Note: If left blank, 2D measurement will be marked as uncalibrated. Never assume a global scale without physical reference.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 4: Research Ground Truth -->
+            <div class="tab-content" id="tab-research">
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label>Physical Ground Truth Crack Length (mm, Optional)</label>
+                        <input type="number" id="gt-input" placeholder="e.g. 400.0 mm" step="any">
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--text-muted); align-self: center; margin-top: 1rem;">
+                        Used to calculate Absolute Error, Percentage Error, and evaluate calibration accuracy.
+                    </div>
+                </div>
+            </div>
+
+            <button class="btn" id="run-btn" onclick="runPipeline()">Run Tri-Method Crack Quantification Pipeline</button>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="card loading" id="loading">
+            <div class="spinner"></div>
+            <p style="font-weight: 700; font-size: 1.15rem;">Executing Multi-Pathway Quantitative Pipeline...</p>
+            <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem;">
+                Detection → Segmentation → Skeletons → Planar Homography Rectification → 3D Arc-Length → Error Evaluation
+            </p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="results" style="display: none;">
+
+            <!-- Calibration Status Header Box -->
+            <div class="calib-status-card" id="calib-status-card">
+                <div class="calib-header">
+                    <div class="calib-title">
+                        <span>🔬</span> Calibration & Planarity Status
+                    </div>
+                    <span id="calib-badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.78rem; font-weight: 700;">
+                        VALID
+                    </span>
+                </div>
+                <div class="calib-grid">
+                    <div>
+                        <div class="calib-item-label">Primary Method</div>
+                        <div class="calib-item-val" id="calib-method-val" style="color: #38bdf8;">PLANAR HOMOGRAPHY</div>
+                    </div>
+                    <div>
+                        <div class="calib-item-label">Reference Dimensions</div>
+                        <div class="calib-item-val" id="calib-dims-val">500 × 500 mm</div>
+                    </div>
+                    <div>
+                        <div class="calib-item-label">Reprojection Error</div>
+                        <div class="calib-item-val" id="calib-reproj-val">0.4 px</div>
+                    </div>
+                    <div>
+                        <div class="calib-item-label">Perspective Skew</div>
+                        <div class="calib-item-val" id="calib-skew-val">LOW</div>
+                    </div>
+                    <div>
+                        <div class="calib-item-label">Surface Planarity (Heuristic)</div>
+                        <div class="calib-item-val" id="calib-planarity-val" style="color: #34d399;">HIGH (92%)</div>
+                    </div>
+                    <div>
+                        <div class="calib-item-label">Recommended Model</div>
+                        <div class="calib-item-val" id="calib-rec-val" style="color: #c084fc;">PLANAR</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sanity Alert Banner -->
+            <div class="alert-banner" id="sanity-alert-box">
+                <div class="alert-title">
+                    <span>⚠️</span> <span id="alert-title-txt">Sanity Discrepancy Alert</span>
+                </div>
+                <div class="alert-body" id="alert-body-txt"></div>
+            </div>
+
+            <!-- Reliability & Adaptive Decision Card (New!) -->
+            <div class="card" id="card-reliability" style="background: rgba(15, 23, 42, 0.95); border: 1.5px solid #38bdf8;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 0.75rem; margin-bottom: 1rem;">
+                    <h3 style="font-size: 1.15rem; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem;">
+                        <span>🛡️</span> Empirical Reliability & Adaptive Decision Engine
+                    </h3>
+                    <span id="rel-badge" style="padding: 0.3rem 0.8rem; border-radius: 9999px; font-weight: 800; font-size: 0.8rem; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3);">
+                        RELIABLE
+                    </span>
+                </div>
+                <div class="grid-4" style="margin-bottom: 1rem;">
+                    <div>
+                        <div class="calib-item-label">Expected Error Bound</div>
+                        <div class="calib-item-val" id="rel-err-bound" style="color: #fbbf24;">± 12.4 mm</div>
+                    </div>
+                    <div>
+                        <div class="calib-item-label">95% Confidence Interval</div>
+                        <div class="calib-item-val" id="rel-ci-val" style="color: #38bdf8;">[488.2 - 512.6] mm</div>
+                    </div>
+                    <div>
+                        <div class="calib-item-label">Recommended Method</div>
+                        <div class="calib-item-val" id="rel-rec-method" style="color: #34d399;">PLANAR HOMOGRAPHY</div>
+                    </div>
+                    <div>
+                        <div class="calib-item-label">Measurement Status</div>
+                        <div class="calib-item-val" id="rel-accept-status" style="color: #34d399;">ACCEPTABLE</div>
+                    </div>
+                </div>
+                <div id="rel-justification" style="font-size: 0.88rem; color: #94a3b8; line-height: 1.5; padding: 0.75rem; background: rgba(30, 41, 59, 0.6); border-radius: 8px;">
+                    Engineering rationale based on viewpoint geometry and planar calibration status.
+                </div>
+            </div>
+
+            <!-- Tri-Method Side-by-Side Cards -->
+            <div class="card">
+                <h2 style="font-size: 1.3rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>📊</span> Tri-Method Physical Measurements Side-by-Side
+                </h2>
+                <p style="color: var(--text-muted); font-size: 0.88rem; margin-bottom: 1.2rem;">
+                    Direct comparison between simple 2D scaling, perspective-rectified planar homography, and 3D surface reconstruction.
+                </p>
+
+                <div class="tri-grid">
+                    <!-- 1. 2D Method -->
+                    <div class="method-card blue">
+                        <div>
+                            <div class="method-header">
+                                <strong style="color: #38bdf8; font-size: 1rem;">2D Global Scale</strong>
+                                <span class="method-tag tag-blue" id="tag-2d">Global Scale</span>
+                            </div>
+                            <div class="method-main-val" id="val-2d-mm">- mm</div>
+                            <div class="method-sub-desc" id="desc-2d">Linear pinhole camera assumption</div>
+                        </div>
+                        <div class="method-metrics">
+                            <div class="metric-row"><span>MST Length:</span><strong id="m-2d-mst">- mm</strong></div>
+                            <div class="metric-row"><span>Dominant Branch:</span><strong id="m-2d-main">- mm</strong></div>
+                            <div class="metric-row"><span>Scale Factor:</span><strong id="m-2d-scale">- mm/px</strong></div>
+                            <div class="metric-row"><span>Calibration:</span><strong id="m-2d-calib">-</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Planar Method (Hero) -->
+                    <div class="method-card hero">
+                        <div>
+                            <div class="method-header">
+                                <strong style="color: #34d399; font-size: 1.05rem;">PLANAR HOMOGRAPHY</strong>
+                                <span class="method-tag tag-green" id="tag-planar">Frontal Metric Plane</span>
+                            </div>
+                            <div class="method-main-val" id="val-planar-mm" style="color: #34d399;">- mm</div>
+                            <div class="method-sub-desc" id="desc-planar">Projective homography rectification</div>
+                        </div>
+                        <div class="method-metrics">
+                            <div class="metric-row"><span>Planar MST Length:</span><strong id="m-p-mst">- mm</strong></div>
+                            <div class="metric-row"><span>Planar Main Branch:</span><strong id="m-p-main">- mm</strong></div>
+                            <div class="metric-row"><span>Mean / Max Width:</span><strong id="m-p-width">- mm</strong></div>
+                            <div class="metric-row"><span>Crack Area:</span><strong id="m-p-area">- mm²</strong></div>
+                            <div class="metric-row"><span>Reference Geometry:</span><strong id="m-p-ref">-</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 3D Method -->
+                    <div class="method-card purple">
+                        <div>
+                            <div class="method-header">
+                                <strong style="color: #c084fc; font-size: 1rem;">3D Surface Arc-Length</strong>
+                                <span class="method-tag tag-purple" id="tag-3d">Depth Projection</span>
+                            </div>
+                            <div class="method-main-val" id="val-3d-mm" style="color: #c084fc;">- mm</div>
+                            <div class="method-sub-desc" id="desc-3d">Back-projected 3D point cloud & relief</div>
+                        </div>
+                        <div class="method-metrics">
+                            <div class="metric-row"><span>3D Main Branch:</span><strong id="m-3d-main">- mm</strong></div>
+                            <div class="metric-row"><span>Sanity Ratio:</span><strong id="m-3d-sanity">-</strong></div>
+                            <div class="metric-row"><span>Camera Distance:</span><strong id="m-3d-dist">1000 mm</strong></div>
+                            <div class="metric-row"><span>Surface Relief:</span><strong id="m-3d-relief">Relief Applied</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Research Ground Truth Error Table -->
+            <div class="card" id="research-card" style="display: none;">
+                <h2 style="font-size: 1.2rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🎯</span> Ground-Truth Error Analysis
+                </h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Estimated Length (mm)</th>
+                                <th>Ground Truth (mm)</th>
+                                <th>Absolute Error (mm)</th>
+                                <th>Percentage Error (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="research-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Skeleton Thinning Algorithm Comparison -->
+            <div class="card" id="skeleton-card">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                    <h2 style="font-size: 1.2rem; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                        <span>🦴</span> Skeleton Thinning Algorithm Comparison
+                    </h2>
+                    <span style="font-size: 0.8rem; color: #94a3b8; background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; padding: 0.2rem 0.6rem; border-radius: 6px;">
+                        Centerline Topology Benchmark
+                    </span>
+                </div>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 0.8rem;">
+                    Centerline metrics across 3 skeletonization engines. Guo-Hall eliminates 2×2 pixel diagonal blocks and prevents spurious junction explosion.
+                </p>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Thinning Algorithm</th>
+                                <th>Network Length (px)</th>
+                                <th>Network Length (mm)</th>
+                                <th>Dominant Path (mm)</th>
+                                <th>MST Length (mm)</th>
+                                <th>Junctions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skeleton-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Summary Table -->
+            <div class="card">
+                <h2 style="font-size: 1.15rem; margin-bottom: 0.5rem;">Comprehensive Measurement Comparison Table</h2>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Network Length (mm)</th>
+                                <th>MST Length (mm)</th>
+                                <th>Dominant Path (mm)</th>
+                                <th>Calibration Basis</th>
+                                <th>Confidence / Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="summary-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Stage 6: Final Estimated Hero -->
+            <div class="hero-stage-card">
+                <div class="hero-stage-header">
+                    <div>
+                        <strong style="font-size: 1.1rem; color: #f8fafc;">Stage 6: Final Measurement HUD Report</strong>
+                        <div style="font-size: 0.82rem; color: #94a3b8; margin-top: 0.2rem;">Annotated crack overlay with 2D, Planar, and 3D physical readings</div>
+                    </div>
+                    <button onclick="zoomImg(document.getElementById('hero-img').src)" class="btn-secondary">🔍 Full Size</button>
+                </div>
+                <div class="hero-img-wrap">
+                    <img id="hero-img" alt="Final Estimated Image">
+                </div>
+            </div>
+
+            <!-- Complete Visual Pipeline Gallery -->
+            <div class="card" style="margin-top: 1.5rem;">
+                <h2 style="font-size: 1.25rem; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>🖼️</span> Complete Visual Pipeline Gallery
+                </h2>
+                <p style="color: var(--text-muted); font-size: 0.88rem;">Click any image to view in high-resolution lightbox</p>
+
+                <div class="stage-gallery">
+                    <div class="stage-card" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">📸 Raw Input</span></div>
+                        <div class="stage-img-wrap"><img id="img-original" alt="Original"></div>
+                        <div class="stage-desc">Original uncropped photograph.</div>
+                    </div>
+
+                    <div class="stage-card" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">1️⃣ Crack Detection</span></div>
+                        <div class="stage-img-wrap"><img id="img-stage1" alt="Detection"></div>
+                        <div class="stage-desc">YOLOv8 bounding boxes & labels.</div>
+                    </div>
+
+                    <div class="stage-card" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">2️⃣ Crack Segmentation</span></div>
+                        <div class="stage-img-wrap"><img id="img-stage2" alt="Segmentation"></div>
+                        <div class="stage-desc">Pixel-precise crack damage contour.</div>
+                    </div>
+
+                    <div class="stage-card" id="card-planar-ref" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">📐 Planar Reference Quad</span></div>
+                        <div class="stage-img-wrap"><img id="img-planar-ref" alt="Planar Reference"></div>
+                        <div class="stage-desc">Selected 4 corner reference plane.</div>
+                    </div>
+
+                    <div class="stage-card" id="card-planar-rect" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">🏁 Rectified Metric Plane</span></div>
+                        <div class="stage-img-wrap"><img id="img-planar-rect" alt="Rectified Plane"></div>
+                        <div class="stage-desc">Front-facing metric plane with scale bar.</div>
+                    </div>
+
+                    <div class="stage-card" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">3️⃣a Guo-Hall Skeleton</span></div>
+                        <div class="stage-img-wrap"><img id="img-stage3a" alt="Guo-Hall"></div>
+                        <div class="stage-desc">Topology-preserving centerline (Cyan).</div>
+                    </div>
+
+                    <div class="stage-card" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">3️⃣b Zhang-Suen Skeleton</span></div>
+                        <div class="stage-img-wrap"><img id="img-stage3b" alt="Zhang-Suen"></div>
+                        <div class="stage-desc">Parallel iterative thinning (Green).</div>
+                    </div>
+
+                    <div class="stage-card" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">3️⃣c Morphological Skeleton</span></div>
+                        <div class="stage-img-wrap"><img id="img-stage3c" alt="Morphological"></div>
+                        <div class="stage-desc">Medial-axis centerline (Orange).</div>
+                    </div>
+
+                    <div class="stage-card" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">4️⃣ 3D Surface Relief</span></div>
+                        <div class="stage-img-wrap"><img id="img-stage4" alt="3D Depth"></div>
+                        <div class="stage-desc">Elevation heatmap for 3D projection.</div>
+                    </div>
+
+                    <div class="stage-card" onclick="zoomImg(this.querySelector('img').src)">
+                        <div class="stage-card-header"><span class="stage-card-title">5️⃣ MST Graph Network</span></div>
+                        <div class="stage-img-wrap"><img id="img-stage5" alt="MST Graph"></div>
+                        <div class="stage-desc">Minimum Spanning Tree nodes & branches.</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================================================================= -->
+    <!-- SECTION 2: SYNTHETIC RESEARCH & VALIDATION STUDIO                 -->
+    <!-- ================================================================= -->
+    <div id="section-research" style="display: none;">
+        
+        <!-- Specimen Generator Controls -->
+        <div class="card">
+            <h2 style="font-size: 1.3rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🔬</span> Parametric Synthetic Crack Specimen Generator
+            </h2>
+            <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.2rem;">
+                Synthesizes mathematical crack curves on 3D concrete manifolds with pinhole camera perspective projection and exact analytical ground truth.
+            </p>
+
+            <div class="grid-3">
+                <div class="form-group">
+                    <label>Crack Topology / Pattern</label>
+                    <select id="syn-crack-type">
+                        <option value="curved">Curved (Brownian Bridge)</option>
+                        <option value="straight">Straight Fracture</option>
+                        <option value="diagonal">Diagonal Shear</option>
+                        <option value="longitudinal">Longitudinal / Vertical</option>
+                        <option value="transverse">Transverse / Horizontal</option>
+                        <option value="branching">Branching Network (1-3 Branches)</option>
+                        <option value="network">Complex Tree Network (2-5 Branches)</option>
+                        <option value="irregular">Irregular Spalled Crack</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Target Crack Length (mm)</label>
+                    <input type="number" id="syn-target-len" value="450" step="10">
+                </div>
+                <div class="form-group">
+                    <label>Surface Manifold Geometry</label>
+                    <select id="syn-surface-type">
+                        <option value="planar_wall">Planar Concrete Wall (Z = 0)</option>
+                        <option value="planar_slab">Planar Slab / Deck (Z = 0)</option>
+                        <option value="inclined_plane">Inclined Structural Plane (15° Tilt)</option>
+                        <option value="cylindrical_column">Cylindrical Column (R = 800mm)</option>
+                        <option value="irregular_surface">Irregular Non-Planar Spalled Surface</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid-4" style="margin-top: 0.8rem;">
+                <div class="form-group">
+                    <label>Working Distance (mm)</label>
+                    <input type="number" id="syn-distance" value="1000" step="100">
+                </div>
+                <div class="form-group">
+                    <label>Camera Yaw Angle (Deg)</label>
+                    <input type="number" id="syn-yaw" value="15" step="5" min="0" max="60">
+                </div>
+                <div class="form-group">
+                    <label>Camera Pitch Angle (Deg)</label>
+                    <input type="number" id="syn-pitch" value="5" step="5" min="0" max="30">
+                </div>
+                <div class="form-group">
+                    <label>Illumination Condition</label>
+                    <select id="syn-lighting">
+                        <option value="normal">Normal Diffuse Daylight</option>
+                        <option value="shadow">Cast Shadow Gradient</option>
+                        <option value="glare">Specular Reflection / Glare</option>
+                        <option value="low_light">Low Light / Underexposed</option>
+                        <option value="moisture">Moist / Damp Concrete</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 1.4rem;">
+                <button class="btn" style="flex: 1; margin-top: 0;" onclick="generateSyntheticSpecimen()">
+                    ⚡ Generate Synthetic Specimen
+                </button>
+                <button class="btn-accent" style="flex: 1;" onclick="launchBatchExperiments()">
+                    🚀 Launch Factorial Batch Experiments
+                </button>
+            </div>
+        </div>
+
+        <!-- Specimen Live Preview & Ground Truth Display -->
+        <div class="card" id="syn-specimen-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 0.8rem; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.15rem; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>📐</span> Specimen Inspection & Exact Analytical Ground Truth
+                </h3>
+                <span id="syn-spec-id" style="font-family: monospace; font-weight: 700; color: #a855f7;">SYN-0000</span>
+            </div>
+
+            <!-- Ground Truth Stat Badges -->
+            <div class="stat-badge-grid">
+                <div class="stat-badge-box">
+                    <div class="stat-badge-title">Analytical Length</div>
+                    <div class="stat-badge-val" id="gt-len-val" style="color: #fbbf24;">450.0 mm</div>
+                </div>
+                <div class="stat-badge-box">
+                    <div class="stat-badge-title">Analytical Mean Width</div>
+                    <div class="stat-badge-val" id="gt-width-val" style="color: #38bdf8;">0.85 mm</div>
+                </div>
+                <div class="stat-badge-box">
+                    <div class="stat-badge-title">Total Fracture Area</div>
+                    <div class="stat-badge-val" id="gt-area-val" style="color: #34d399;">382.5 mm²</div>
+                </div>
+                <div class="stat-badge-box">
+                    <div class="stat-badge-title">Topological Topology</div>
+                    <div class="stat-badge-val" id="gt-topo-val" style="color: #c084fc; font-size: 1.15rem;">1 Branch, 0 Junc</div>
+                </div>
+            </div>
+
+            <!-- Side by Side Preview -->
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div>
+                    <div style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.4rem;">
+                        Projected Realistic Camera View (With 500x500mm Reference Target)
+                    </div>
+                    <div class="hero-img-wrap" style="height: 320px; border-radius: 10px; border: 1px solid #334155;">
+                        <img id="syn-img-raw" style="cursor: pointer;" onclick="zoomImg(this.src)" alt="Synthetic Image">
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; margin-bottom: 0.4rem;">
+                        Exact Analytical Ground Truth Centerline Overlay (Yellow)
+                    </div>
+                    <div class="hero-img-wrap" style="height: 320px; border-radius: 10px; border: 1px solid #334155;">
+                        <img id="syn-img-overlay" style="cursor: pointer;" onclick="zoomImg(this.src)" alt="Ground Truth Overlay">
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 1.2rem;">
+                <button class="btn" style="margin-top: 0; background: linear-gradient(135deg, #059669, #0284c7);" onclick="runSingleSyntheticTrial()">
+                    🧪 Execute Validation Trial on Current Specimen
+                </button>
+            </div>
+
+            <!-- Single Trial Validation Output -->
+            <div id="syn-trial-results" style="display: none; margin-top: 1.5rem; border-top: 1px solid #334155; padding-top: 1.2rem;">
+                <h4 style="font-size: 1.05rem; color: #34d399; margin-bottom: 0.8rem;">Trial Quantification vs Ground Truth</h4>
+                <div style="overflow-x: auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Method</th>
+                                <th>Ground Truth (mm)</th>
+                                <th>Measured (mm)</th>
+                                <th>Absolute Error (mm)</th>
+                                <th>Percentage Error (%)</th>
+                                <th>Verdict</th>
+                            </tr>
+                        </thead>
+                        <tbody id="syn-trial-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Batch Experiments Results Panel -->
+        <div class="card" id="batch-results-panel" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 0.8rem; margin-bottom: 1rem;">
+                <h3 style="font-size: 1.2rem; color: #38bdf8; display: flex; align-items: center; gap: 0.5rem;">
+                    <span>📊</span> Factorial Experiment Suite Results & Benchmark
+                </h3>
+                <span id="batch-n-badge" style="background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 0.25rem 0.8rem; border-radius: 9999px; font-weight: 700; font-size: 0.8rem;">
+                    N = 12 Trials
+                </span>
+            </div>
+
+            <!-- Benchmark Aggregate Metrics (MAE, RMSE, MAPE) -->
+            <div class="tri-grid" id="batch-stats-cards"></div>
+
+            <!-- Sliced Performance Matrix -->
+            <h4 style="font-size: 1.1rem; color: #f8fafc; margin: 1.5rem 0 0.6rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>🎯</span> Sliced Performance Breakdown by Camera & Surface Factor
+            </h4>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Factor / Condition</th>
+                            <th>Trials</th>
+                            <th>2D Mean Error (%)</th>
+                            <th>Planar Mean Error (%)</th>
+                            <th>3D Mean Error (%)</th>
+                            <th>Optimal Method</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batch-matrix-tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Failure Modes Diagnostics -->
+            <div id="batch-failures-container" style="margin-top: 1.5rem;"></div>
+
+            <!-- Detailed Specimen Trials Table -->
+            <h4 style="font-size: 1.1rem; color: #f8fafc; margin: 1.8rem 0 0.6rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span>📋</span> Specimen Trial Records
+            </h4>
+            <div style="overflow-x: auto; max-height: 420px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Trial ID</th>
+                            <th>Surface</th>
+                            <th>Yaw</th>
+                            <th>Distance</th>
+                            <th>Ground Truth</th>
+                            <th>2D Error</th>
+                            <th>Planar Error</th>
+                            <th>3D Error</th>
+                            <th>Adaptive Pick</th>
+                        </tr>
+                    </thead>
+                    <tbody id="batch-trials-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div class="lightbox" id="lightbox" onclick="this.style.display='none'">
+    <img id="lightbox-img" alt="Zoomed view">
+</div>
+
+<script>
+let currentMainMode = 'field';
+let selectedImageFile = null;
+let loadedImage = null;
+let cornerPoints = [];
+let canvas = document.getElementById('canvas-preview');
+let ctx = canvas.getContext('2d');
+let currentSyntheticSpecimen = null;
+
+function switchMainMode(mode) {
+    currentMainMode = mode;
+    if (mode === 'field') {
+        document.getElementById('btn-mode-field').classList.add('active');
+        document.getElementById('btn-mode-research').classList.remove('active');
+        document.getElementById('section-field').style.display = 'block';
+        document.getElementById('section-research').style.display = 'none';
+    } else {
+        document.getElementById('btn-mode-research').classList.add('active');
+        document.getElementById('btn-mode-field').classList.remove('active');
+        document.getElementById('section-field').style.display = 'none';
+        document.getElementById('section-research').style.display = 'block';
+    }
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+}
+
+function imageSelected(input) {
+    if (input.files && input.files[0]) {
+        selectedImageFile = input.files[0];
+        document.getElementById('file-name').innerText = 'Selected: ' + selectedImageFile.name;
+        
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                loadedImage = img;
+                canvas.width = img.naturalWidth;
+                document.getElementById('preview-container').style.display = 'block';
+                autoSetCorners();
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(selectedImageFile);
+    }
+}
+
+// Drag & drop support
+const dropzone = document.getElementById('dropzone-box');
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = '#38bdf8'; });
+dropzone.addEventListener('dragleave', (e) => { e.preventDefault(); dropzone.style.borderColor = '#475569'; });
+dropzone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropzone.style.borderColor = '#475569';
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+        document.getElementById('image-file').files = e.dataTransfer.files;
+        imageSelected(document.getElementById('image-file'));
+    }
+});
+
+// Canvas click to select 4 points
+canvas.addEventListener('click', (e) => {
+    if (!loadedImage) return;
+    if (document.getElementById('calib-mode-select').value !== 'manual_4point') return;
+
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+
+    const clickX = (e.clientX - rect.left) * scaleX;
+    const clickY = (e.clientY - rect.top) * scaleY;
+
+    if (cornerPoints.length >= 4) {
+        cornerPoints = [];
+    }
+    cornerPoints.push({ x: clickX, y: clickY });
+    drawCanvas();
+    updatePtsLabel();
+});
+
+function drawCanvas() {
+    if (!loadedImage) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(loadedImage, 0, 0);
+
+    const labels = ["P1 (TL)", "P2 (TR)", "P3 (BR)", "P4 (BL)"];
+    const colors = ["#00ffff", "#00ff00", "#ff8000", "#ff00ff"];
+
+    if (cornerPoints.length >= 2) {
+        ctx.beginPath();
+        ctx.moveTo(cornerPoints[0].x, cornerPoints[0].y);
+        for (let i = 1; i < cornerPoints.length; i++) {
+            ctx.lineTo(cornerPoints[i].x, cornerPoints[i].y);
+        }
+        if (cornerPoints.length === 4) {
+            ctx.closePath();
+            ctx.fillStyle = "rgba(2, 132, 199, 0.25)";
+            ctx.fill();
+        }
+        ctx.strokeStyle = "#38bdf8";
+        ctx.lineWidth = Math.max(2, canvas.width / 400);
+        ctx.stroke();
+    }
+
+    cornerPoints.forEach((pt, idx) => {
+        const radius = Math.max(5, canvas.width / 120);
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, radius, 0, 2 * Math.PI);
+        ctx.fillStyle = colors[idx] || "#ffffff";
+        ctx.fill();
+        ctx.strokeStyle = "#000000";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.font = `bold ${Math.max(14, canvas.width / 60)}px sans-serif`;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(labels[idx] || `P${idx+1}`, pt.x + radius + 4, pt.y - radius - 2);
+    });
+}
+
+function clearCorners() {
+    cornerPoints = [];
+    drawCanvas();
+    updatePtsLabel();
+}
+
+function autoSetCorners() {
+    if (!loadedImage) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    const padX = w * 0.15;
+    const padY = h * 0.15;
+    cornerPoints = [
+        { x: padX, y: padY },
+        { x: w - padX, y: padY },
+        { x: w - padX, y: h - padY },
+        { x: padX, y: h - padY }
+    ];
+    drawCanvas();
+    updatePtsLabel();
+}
+
+function updatePtsLabel() {
+    const lbl = document.getElementById('pts-count-lbl');
+    lbl.innerText = `${cornerPoints.length} of 4`;
+    if (cornerPoints.length === 4) {
+        lbl.innerText += " (Complete)";
+        lbl.style.color = "#34d399";
+    } else {
+        lbl.style.color = "#38bdf8";
+    }
+}
+
+function onCalibModeChange() {
+    const mode = document.getElementById('calib-mode-select').value;
+    const status = document.getElementById('canvas-status');
+    if (mode === 'manual_4point') {
+        status.innerText = "💡 Click 4 corner points on image to calibrate plane (TL → TR → BR → BL)";
+    } else if (mode === 'marker_aruco') {
+        status.innerText = "💡 Automatic ArUco marker mode: corner points will be detected automatically";
+    } else {
+        status.innerText = "💡 No planar reference selected (2D & 3D methods only)";
+    }
+}
+
+function zoomImg(src) {
+    if (!src) return;
+    document.getElementById('lightbox-img').src = src;
+    document.getElementById('lightbox').style.display = 'flex';
+}
+
+// -------------------------------------------------------------
+// FIELD MEASUREMENT PIPELINE
+// -------------------------------------------------------------
+async function runPipeline() {
+    if (!selectedImageFile) {
+        alert('Please upload an infrastructure photograph first.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('image', selectedImageFile);
+
+    const calibMode = document.getElementById('calib-mode-select').value;
+    formData.append('calibration_mode', calibMode);
+
+    const refW = document.getElementById('ref-w-input').value;
+    if (refW) formData.append('ref_width_mm', refW);
+
+    const refH = document.getElementById('ref-h-input').value;
+    if (refH) formData.append('ref_height_mm', refH);
+
+    if (calibMode === 'manual_4point' && cornerPoints.length !== 4) {
+        autoSetCorners();
+    }
+
+    if (calibMode === 'manual_4point' && cornerPoints.length === 4) {
+        const ptsArr = cornerPoints.map(p => [Math.round(p.x * 10) / 10, Math.round(p.y * 10) / 10]);
+        formData.append('corners', JSON.stringify(ptsArr));
+    }
+
+    const dist = document.getElementById('distance-input').value;
+    if (dist) formData.append('distance_mm', dist);
+
+    const focal = document.getElementById('focal-input').value;
+    if (focal) formData.append('focal_length_mm', focal);
+
+    const sensor = document.getElementById('sensor-input').value;
+    if (sensor) formData.append('sensor_width_mm', sensor);
+
+    const scale = document.getElementById('scale-input').value;
+    if (scale) formData.append('mm_per_px', scale);
+
+    const gt = document.getElementById('gt-input').value;
+    if (gt) formData.append('ground_truth_mm', gt);
+
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('run-btn').disabled = true;
+
+    try {
+        const resp = await fetch('/api/crack-length', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await resp.json();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('run-btn').disabled = false;
+
+        if (data.status !== 'success') {
+            alert('Analysis failed: ' + (data.reason || 'Unknown error'));
+            return;
+        }
+
+        document.getElementById('results').style.display = 'block';
+
+        // 1. Calibration Status Box
+        const cal = data.calibration_status || {};
+        document.getElementById('calib-method-val').innerText = cal.method || 'UNCALIBRATED';
+        document.getElementById('calib-badge').innerText = cal.status || 'STATUS';
+        document.getElementById('calib-badge').style.color = (cal.status === 'VALID') ? '#34d399' : '#fbbf24';
+
+        if (cal.reference_width_mm && cal.reference_height_mm) {
+            document.getElementById('calib-dims-val').innerText = `${cal.reference_width_mm.toFixed(0)} × ${cal.reference_height_mm.toFixed(0)} mm`;
+        } else {
+            document.getElementById('calib-dims-val').innerText = 'None';
+        }
+
+        document.getElementById('calib-reproj-val').innerText = cal.reprojection_error_px != null ? `${cal.reprojection_error_px.toFixed(2)} px` : 'N/A';
+        document.getElementById('calib-skew-val').innerText = cal.perspective_distortion || 'None';
+        document.getElementById('calib-planarity-val').innerText = `${cal.planarity_label || 'HIGH'} (${cal.planarity_score || 90}%)`;
+        document.getElementById('calib-rec-val').innerText = cal.recommended_method || 'PLANAR';
+
+        // 2. Sanity Warnings Alert
+        const alertBox = document.getElementById('sanity-alert-box');
+        const warnings = data.warnings || [];
+        if (warnings.length > 0) {
+            alertBox.style.display = 'block';
+            document.getElementById('alert-title-txt').innerText = warnings[0].title || 'Sanity Discrepancy';
+            document.getElementById('alert-body-txt').innerText = warnings.map(w => w.message).join(' | ');
+        } else {
+            alertBox.style.display = 'none';
+        }
+
+        // 3. Reliability & Adaptive Decision Engine Display
+        const rel = data.reliability_prediction || {};
+        const rec = data.method_recommendation || {};
+        document.getElementById('rel-err-bound').innerText = `± ${(rel.expected_error_mm || 15.0).toFixed(1)} mm`;
+        document.getElementById('rel-ci-val').innerText = `[${(rel.confidence_interval_95?.[0] || 0).toFixed(1)} - ${(rel.confidence_interval_95?.[1] || 0).toFixed(1)}] mm`;
+        document.getElementById('rel-rec-method').innerText = rec.recommended_method || 'PLANAR';
+        document.getElementById('rel-accept-status').innerText = rec.is_measurement_acceptable ? 'ACCEPTABLE' : 'UNACCEPTABLE';
+        document.getElementById('rel-accept-status').style.color = rec.is_measurement_acceptable ? '#34d399' : '#f43f5e';
+        document.getElementById('rel-badge').innerText = rel.measurement_reliability || 'HIGH';
+        document.getElementById('rel-badge').style.color = (rel.measurement_reliability === 'HIGH') ? '#34d399' : (rel.measurement_reliability === 'MEDIUM' ? '#38bdf8' : '#fbbf24');
+        document.getElementById('rel-justification').innerText = `Primary Recommendation: ${rec.recommended_method}. ${rec.justification || ''} Primary Metric Reliability: ${rel.measurement_reliability}.`;
+
+        // 4. Tri-Method Cards
+        const m = data.measurements || {};
+        const m2d = m['2d'] || {};
+        const mp = m['planar'] || null;
+        const m3d = m['3d'] || {};
+
+        if (m2d.calibrated && m2d.network_length_mm) {
+            document.getElementById('val-2d-mm').innerText = m2d.network_length_mm.toFixed(1) + ' mm';
+            document.getElementById('desc-2d').innerText = 'User-calibrated scale';
+            document.getElementById('tag-2d').innerText = 'Calibrated';
+        } else {
+            const rawMm = data.length_mm != null ? data.length_mm.toFixed(1) + ' mm' : '-';
+            document.getElementById('val-2d-mm').innerText = rawMm;
+            document.getElementById('desc-2d').innerText = 'Pinhole camera model estimate (uncalibrated)';
+            document.getElementById('tag-2d').innerText = 'Estimated';
+        }
+        document.getElementById('m-2d-mst').innerText = m2d.mst_length_mm ? m2d.mst_length_mm.toFixed(1) + ' mm' : '-';
+        document.getElementById('m-2d-main').innerText = m2d.main_path_mm ? m2d.main_path_mm.toFixed(1) + ' mm' : '-';
+        document.getElementById('m-2d-scale').innerText = m2d.scale_mm_per_px ? m2d.scale_mm_per_px.toFixed(4) + ' mm/px' : '-';
+        document.getElementById('m-2d-calib').innerText = m2d.scale_source || 'camera_estimate';
+
+        if (mp && mp.network_length_mm) {
+            document.getElementById('val-planar-mm').innerText = mp.network_length_mm.toFixed(1) + ' mm';
+            document.getElementById('m-p-mst').innerText = mp.mst_length_mm ? mp.mst_length_mm.toFixed(1) + ' mm' : '-';
+            document.getElementById('m-p-main').innerText = mp.main_branch_mm ? mp.main_branch_mm.toFixed(1) + ' mm' : '-';
+            document.getElementById('m-p-width').innerText = `${mp.mean_width_mm?.toFixed(2)} / ${mp.max_width_mm?.toFixed(2)} mm`;
+            document.getElementById('m-p-area').innerText = mp.area_mm2 ? mp.area_mm2.toFixed(1) + ' mm²' : '-';
+            document.getElementById('m-p-ref').innerText = `${mp.ref_width_mm} × ${mp.ref_height_mm} mm`;
+        } else {
+            document.getElementById('val-planar-mm').innerText = 'N/A';
+            document.getElementById('desc-planar').innerText = 'No planar reference provided. Select 4 points or marker.';
+        }
+
+        document.getElementById('val-3d-mm').innerText = (m3d.arc_length_mm || data.length_3d_mm || 0).toFixed(1) + ' mm';
+        document.getElementById('m-3d-main').innerText = (m3d.main_branch_mm || data.main_branch_3d_mm || 0).toFixed(1) + ' mm';
+        document.getElementById('m-3d-sanity').innerText = (m3d.sanity_ratio || data.sanity_ratio || 1.0) + 'x';
+        document.getElementById('m-3d-dist').innerText = (m3d.camera_distance_mm || 1000) + ' mm';
+
+        // 5. Research Table
+        const resComp = data.research_comparison;
+        const resCard = document.getElementById('research-card');
+        const resTbody = document.getElementById('research-tbody');
+        resTbody.innerHTML = '';
+        if (resComp && resComp.has_ground_truth && resComp.comparison_rows) {
+            resCard.style.display = 'block';
+            resComp.comparison_rows.forEach(r => {
+                const tr = document.createElement('tr');
+                const isBest = r.method === resComp.best_performing_method;
+                tr.innerHTML = `
+                    <td><strong>${r.method}</strong> ${isBest ? '⭐ <span style="color:#34d399;font-weight:700;">(Lowest Error)</span>' : ''}</td>
+                    <td>${r.estimated_mm.toFixed(1)} mm</td>
+                    <td>${r.ground_truth_mm.toFixed(1)} mm</td>
+                    <td>${r.absolute_error_mm.toFixed(1)} mm</td>
+                    <td style="color:${r.percentage_error < 5 ? '#34d399' : (r.percentage_error < 15 ? '#38bdf8' : '#fbbf24')}; font-weight:700;">
+                        ${r.percentage_error.toFixed(1)}%
+                    </td>
+                `;
+                resTbody.appendChild(tr);
+            });
+        } else {
+            resCard.style.display = 'none';
+        }
+
+        // 5b. Skeleton Thinning Algorithm Comparison Table
+        const skelTbody = document.getElementById('skeleton-tbody');
+        if (skelTbody) {
+            skelTbody.innerHTML = '';
+            const pm = data.per_method || {};
+            for (const [alg, vals] of Object.entries(pm)) {
+                const tr = document.createElement('tr');
+                const isGh = alg === 'guo_hall';
+                const juncVal = vals.junctions != null ? vals.junctions : 0;
+                const juncHigh = juncVal > 50;
+                tr.innerHTML = `
+                    <td>
+                        <strong style="color: ${isGh ? '#38bdf8' : '#f8fafc'};">${alg}</strong>
+                        ${isGh ? '<span style="margin-left: 6px; background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">★ Recommended</span>' : ''}
+                    </td>
+                    <td>${(vals.network_px != null ? vals.network_px : 0).toFixed(1)}</td>
+                    <td><strong style="color: ${isGh ? '#34d399' : '#f8fafc'};">${(vals.network_mm != null ? vals.network_mm : 0).toFixed(2)} mm</strong></td>
+                    <td>${(vals.main_path_mm != null ? vals.main_path_mm : 0).toFixed(2)} mm</td>
+                    <td>${(vals.mst_mm != null ? vals.mst_mm : 0).toFixed(2)} mm</td>
+                    <td style="color: ${juncHigh ? '#fbbf24' : '#94a3b8'}; font-weight: ${juncHigh ? '700' : '400'};">
+                        ${juncVal} ${juncHigh ? '<span style="font-size:0.75rem; color:#f87171;">(Spurious spurs)</span>' : ''}
+                    </td>
+                `;
+                skelTbody.appendChild(tr);
+            }
+        }
+
+        // 6. Summary Table
+        const sumTbody = document.getElementById('summary-tbody');
+        sumTbody.innerHTML = `
+            <tr>
+                <td><strong>2D Method</strong></td>
+                <td>${m2d.network_length_mm ? m2d.network_length_mm.toFixed(1) + ' mm' : '-'}</td>
+                <td>${m2d.mst_length_mm ? m2d.mst_length_mm.toFixed(1) + ' mm' : '-'}</td>
+                <td>${m2d.main_path_mm ? m2d.main_path_mm.toFixed(1) + ' mm' : '-'}</td>
+                <td>${m2d.scale_source || 'Camera Estimate'}</td>
+                <td>${m2d.calibrated ? 'Calibrated' : 'Uncalibrated'}</td>
+            </tr>
+            <tr style="background: rgba(16, 185, 129, 0.08);">
+                <td><strong style="color: #34d399;">Planar Homography</strong></td>
+                <td><strong>${mp ? mp.network_length_mm.toFixed(1) + ' mm' : 'N/A'}</strong></td>
+                <td>${mp ? mp.mst_length_mm.toFixed(1) + ' mm' : 'N/A'}</td>
+                <td>${mp ? mp.main_branch_mm.toFixed(1) + ' mm' : 'N/A'}</td>
+                <td>Metric Homography Quad</td>
+                <td><span style="color: #34d399; font-weight: 700;">${mp ? mp.status : 'N/A'}</span></td>
+            </tr>
+            <tr>
+                <td><strong>3D Reconstruction</strong></td>
+                <td>${(m3d.arc_length_mm || data.length_3d_mm || 0).toFixed(1)} mm</td>
+                <td>-</td>
+                <td>${(m3d.main_branch_mm || data.main_branch_3d_mm || 0).toFixed(1)} mm</td>
+                <td>Depth Elevation Map</td>
+                <td>Sanity: ${(m3d.sanity_ratio || 1.0)}x</td>
+            </tr>
+        `;
+
+        // 7. Stage Images
+        const imgs = data.stage_images || {};
+        if (imgs.stage6_final_estimated) document.getElementById('hero-img').src = imgs.stage6_final_estimated;
+        if (imgs.original) document.getElementById('img-original').src = imgs.original;
+        if (imgs.stage1_detection) document.getElementById('img-stage1').src = imgs.stage1_detection;
+        if (imgs.stage2_segmentation) document.getElementById('img-stage2').src = imgs.stage2_segmentation;
+        if (imgs.stage3_guo_hall) document.getElementById('img-stage3a').src = imgs.stage3_guo_hall;
+        if (imgs.stage3_zhang_suen) document.getElementById('img-stage3b').src = imgs.stage3_zhang_suen;
+        if (imgs.stage3_morphological) document.getElementById('img-stage3c').src = imgs.stage3_morphological;
+        if (imgs.stage4_depth_3d) document.getElementById('img-stage4').src = imgs.stage4_depth_3d;
+        if (imgs.stage5_mst_graph) document.getElementById('img-stage5').src = imgs.stage5_mst_graph;
+
+        if (imgs.planar_reference_overlay) {
+            document.getElementById('img-planar-ref').src = imgs.planar_reference_overlay;
+            document.getElementById('card-planar-ref').style.display = 'flex';
+        } else {
+            document.getElementById('card-planar-ref').style.display = 'none';
+        }
+
+        if (imgs.planar_rectified) {
+            document.getElementById('img-planar-rect').src = imgs.planar_rectified;
+            document.getElementById('card-planar-rect').style.display = 'flex';
+        } else {
+            document.getElementById('card-planar-rect').style.display = 'none';
+        }
+
+        document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+
+    } catch (err) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('run-btn').disabled = false;
+        alert('Pipeline request failed: ' + err.message);
+    }
+}
+
+// -------------------------------------------------------------
+// RESEARCH & VALIDATION STUDIO LOGIC
+// -------------------------------------------------------------
+async function generateSyntheticSpecimen() {
+    const payload = {
+        crack_type: document.getElementById('syn-crack-type').value,
+        target_length_mm: parseFloat(document.getElementById('syn-target-len').value) || 450.0,
+        surface_type: document.getElementById('syn-surface-type').value,
+        distance_mm: parseFloat(document.getElementById('syn-distance').value) || 1000.0,
+        yaw_deg: parseFloat(document.getElementById('syn-yaw').value) || 15.0,
+        pitch_deg: parseFloat(document.getElementById('syn-pitch').value) || 5.0,
+        lighting_condition: document.getElementById('syn-lighting').value,
+    };
+
+    try {
+        const resp = await fetch('/api/research/generate-specimen', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+        if (res.status !== 'success') {
+            alert('Generation failed: ' + res.message);
+            return;
+        }
+
+        currentSyntheticSpecimen = res;
+        document.getElementById('syn-specimen-panel').style.display = 'block';
+        document.getElementById('syn-trial-results').style.display = 'none';
+
+        document.getElementById('syn-spec-id').innerText = res.specimen_id;
+        const gt = res.ground_truth;
+        document.getElementById('gt-len-val').innerText = `${gt.total_centerline_length_mm.toFixed(1)} mm`;
+        document.getElementById('gt-width-val').innerText = `${gt.mean_width_mm.toFixed(2)} mm`;
+        document.getElementById('gt-area-val').innerText = `${gt.total_area_mm2.toFixed(1)} mm²`;
+        document.getElementById('gt-topo-val').innerText = `${gt.branch_count} Branches, ${gt.junction_count} Junc`;
+
+        document.getElementById('syn-img-raw').src = res.image_b64;
+        document.getElementById('syn-img-overlay').src = res.gt_vis_b64;
+
+        document.getElementById('syn-specimen-panel').scrollIntoView({ behavior: 'smooth' });
+
+    } catch (e) {
+        alert('Error generating specimen: ' + e.message);
+    }
+}
+
+async function runSingleSyntheticTrial() {
+    if (!currentSyntheticSpecimen) {
+        alert('Please generate a synthetic specimen first.');
+        return;
+    }
+
+    const payload = {
+        mode: 'single',
+        crack_type: document.getElementById('syn-crack-type').value,
+        surface_type: document.getElementById('syn-surface-type').value,
+        target_length_mm: parseFloat(document.getElementById('syn-target-len').value) || 450.0,
+        distance_mm: parseFloat(document.getElementById('syn-distance').value) || 1000.0,
+        yaw_deg: parseFloat(document.getElementById('syn-yaw').value) || 15.0,
+        pitch_deg: parseFloat(document.getElementById('syn-pitch').value) || 5.0,
+        lighting_condition: document.getElementById('syn-lighting').value,
+        seed: currentSyntheticSpecimen.seed
+    };
+
+    try {
+        const resp = await fetch('/api/research/run-experiment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const res = await resp.json();
+        if (res.status !== 'success') {
+            alert('Trial failed: ' + res.message);
+            return;
+        }
+
+        const rec = res.record;
+        const gtLen = res.ground_truth.total_centerline_length_mm;
+        const tbody = document.getElementById('syn-trial-tbody');
+        tbody.innerHTML = `
+            <tr>
+                <td><strong>2D Camera Pinhole Scale</strong></td>
+                <td>${gtLen.toFixed(1)} mm</td>
+                <td>${rec.estimate_2d_mm != null ? rec.estimate_2d_mm.toFixed(1) + ' mm' : 'N/A'}</td>
+                <td>${rec.error_2d_abs_mm != null ? rec.error_2d_abs_mm.toFixed(1) + ' mm' : '-'}</td>
+                <td style="color:${rec.error_2d_pct < 10 ? '#34d399' : '#fbbf24'}; font-weight:700;">
+                    ${rec.error_2d_pct != null ? rec.error_2d_pct.toFixed(1) + '%' : '-'}
+                </td>
+                <td>${rec.error_2d_pct < 10 ? '✅ Pass' : '⚠️ Skew Error'}</td>
+            </tr>
+            <tr style="background: rgba(16, 185, 129, 0.08);">
+                <td><strong style="color: #34d399;">Planar Homography (500x500mm Ref)</strong></td>
+                <td>${gtLen.toFixed(1)} mm</td>
+                <td>${rec.estimate_planar_mm != null ? rec.estimate_planar_mm.toFixed(1) + ' mm' : 'N/A'}</td>
+                <td>${rec.error_planar_abs_mm != null ? rec.error_planar_abs_mm.toFixed(1) + ' mm' : '-'}</td>
+                <td style="color:${rec.error_planar_pct < 10 ? '#34d399' : '#fbbf24'}; font-weight:700;">
+                    ${rec.error_planar_pct != null ? rec.error_planar_pct.toFixed(1) + '%' : '-'}
+                </td>
+                <td>${rec.error_planar_pct < 10 ? '✅ Pass (Rectified)' : '⚠️ Out-of-plane'}</td>
+            </tr>
+            <tr>
+                <td><strong style="color: #c084fc;">3D Surface Arc-Length</strong></td>
+                <td>${gtLen.toFixed(1)} mm</td>
+                <td>${rec.estimate_3d_mm != null ? rec.estimate_3d_mm.toFixed(1) + ' mm' : 'N/A'}</td>
+                <td>${rec.error_3d_abs_mm != null ? rec.error_3d_abs_mm.toFixed(1) + ' mm' : '-'}</td>
+                <td style="color:${rec.error_3d_pct < 10 ? '#34d399' : '#fbbf24'}; font-weight:700;">
+                    ${rec.error_3d_pct != null ? rec.error_3d_pct.toFixed(1) + '%' : '-'}
+                </td>
+                <td>${rec.error_3d_pct < 10 ? '✅ Pass (Curvature)' : '⚠️ Depth Noise'}</td>
+            </tr>
+        `;
+        document.getElementById('syn-trial-results').style.display = 'block';
+
+    } catch (e) {
+        alert('Error executing trial: ' + e.message);
+    }
+}
+
+async function launchBatchExperiments() {
+    if (!confirm('Launch automated factorial batch evaluation suite (12 diverse specimens across angles, distances, manifolds)?')) {
+        return;
+    }
+
+    const panel = document.getElementById('batch-results-panel');
+    panel.style.display = 'block';
+    panel.scrollIntoView({ behavior: 'smooth' });
+
+    const statsCards = document.getElementById('batch-stats-cards');
+    statsCards.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 2rem;">
+            <div class="spinner"></div>
+            <p style="color: #38bdf8; font-weight: 700;">Executing Factorial Trials & Compiling Performance Matrix...</p>
+        </div>
+    `;
+
+    try {
+        const resp = await fetch('/api/research/run-experiment', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: 'batch', num_samples: 12 })
+        });
+        const res = await resp.json();
+        if (res.status !== 'success') {
+            alert('Batch run failed: ' + res.message);
+            return;
+        }
+
+        // 1. Fill Aggregate Benchmark Cards
+        const stats = res.statistics || {};
+        const s2d = stats['2d'] || {};
+        const sp = stats['planar'] || {};
+        const s3d = stats['3d'] || {};
+
+        statsCards.innerHTML = `
+            <div class="method-card blue">
+                <div>
+                    <div class="method-header">
+                        <strong style="color: #38bdf8;">2D Global Scale</strong>
+                        <span class="method-tag tag-blue">Pinhole Model</span>
+                    </div>
+                    <div class="method-main-val" style="color: #38bdf8;">${s2d.mape_percent != null ? s2d.mape_percent.toFixed(1) + '%' : '-'}</div>
+                    <div class="method-sub-desc">Mean Absolute Percentage Error (MAPE)</div>
+                </div>
+                <div class="method-metrics">
+                    <div class="metric-row"><span>MAE (Mean Abs Error):</span><strong>${s2d.mae_mm != null ? s2d.mae_mm.toFixed(1) + ' mm' : '-'}</strong></div>
+                    <div class="metric-row"><span>RMSE:</span><strong>${s2d.rmse_mm != null ? s2d.rmse_mm.toFixed(1) + ' mm' : '-'}</strong></div>
+                    <div class="metric-row"><span>Median Error:</span><strong>${s2d.median_ae_mm != null ? s2d.median_ae_mm.toFixed(1) + ' mm' : '-'}</strong></div>
+                </div>
+            </div>
+
+            <div class="method-card hero">
+                <div>
+                    <div class="method-header">
+                        <strong style="color: #34d399;">Planar Homography</strong>
+                        <span class="method-tag tag-green">Frontal Rectified</span>
+                    </div>
+                    <div class="method-main-val" style="color: #34d399;">${sp.mape_percent != null ? sp.mape_percent.toFixed(1) + '%' : '-'}</div>
+                    <div class="method-sub-desc">Mean Absolute Percentage Error (MAPE)</div>
+                </div>
+                <div class="method-metrics">
+                    <div class="metric-row"><span>MAE (Mean Abs Error):</span><strong>${sp.mae_mm != null ? sp.mae_mm.toFixed(1) + ' mm' : '-'}</strong></div>
+                    <div class="metric-row"><span>RMSE:</span><strong>${sp.rmse_mm != null ? sp.rmse_mm.toFixed(1) + ' mm' : '-'}</strong></div>
+                    <div class="metric-row"><span>Median Error:</span><strong>${sp.median_ae_mm != null ? sp.median_ae_mm.toFixed(1) + ' mm' : '-'}</strong></div>
+                </div>
+            </div>
+
+            <div class="method-card purple">
+                <div>
+                    <div class="method-header">
+                        <strong style="color: #c084fc;">3D Arc-Length</strong>
+                        <span class="method-tag tag-purple">Curved Manifold</span>
+                    </div>
+                    <div class="method-main-val" style="color: #c084fc;">${s3d.mape_percent != null ? s3d.mape_percent.toFixed(1) + '%' : '-'}</div>
+                    <div class="method-sub-desc">Mean Absolute Percentage Error (MAPE)</div>
+                </div>
+                <div class="method-metrics">
+                    <div class="metric-row"><span>MAE (Mean Abs Error):</span><strong>${s3d.mae_mm != null ? s3d.mae_mm.toFixed(1) + ' mm' : '-'}</strong></div>
+                    <div class="metric-row"><span>RMSE:</span><strong>${s3d.rmse_mm != null ? s3d.rmse_mm.toFixed(1) + ' mm' : '-'}</strong></div>
+                    <div class="metric-row"><span>Median Error:</span><strong>${s3d.median_ae_mm != null ? s3d.median_ae_mm.toFixed(1) + ' mm' : '-'}</strong></div>
+                </div>
+            </div>
+        `;
+
+        // 2. Performance Matrix Rows
+        const mat = res.performance_matrix || {};
+        const matTbody = document.getElementById('batch-matrix-tbody');
+        matTbody.innerHTML = '';
+        const slices = [
+            ...((mat.by_angle || []).map(x => ({ ...x, category: 'Camera Yaw Angle' }))),
+            ...((mat.by_distance || []).map(x => ({ ...x, category: 'Distance' }))),
+            ...((mat.by_surface || []).map(x => ({ ...x, category: 'Surface Manifold' })))
+        ];
+
+        slices.forEach(row => {
+            const e2d = row.mean_error_2d_pct;
+            const ep = row.mean_error_planar_pct;
+            const e3d = row.mean_error_3d_pct;
+
+            // Pick lowest error
+            let best = 'PLANAR';
+            let minErr = ep ?? 999;
+            if (e3d != null && e3d < minErr) { minErr = e3d; best = '3D'; }
+            if (e2d != null && e2d < minErr) { minErr = e2d; best = '2D'; }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${row.condition}</strong> <span style="font-size:0.75rem; color:#94a3b8;">(${row.category})</span></td>
+                <td>${row.trials}</td>
+                <td style="color:${e2d < 10 ? '#34d399' : '#fbbf24'};">${e2d != null ? e2d.toFixed(1) + '%' : '-'}</td>
+                <td style="color:${ep < 10 ? '#34d399' : '#fbbf24'}; font-weight:700;">${ep != null ? ep.toFixed(1) + '%' : '-'}</td>
+                <td style="color:${e3d < 10 ? '#34d399' : '#fbbf24'};">${e3d != null ? e3d.toFixed(1) + '%' : '-'}</td>
+                <td><span class="method-tag ${best==='PLANAR'?'tag-green':(best==='3D'?'tag-purple':'tag-blue')}">${best}</span></td>
+            `;
+            matTbody.appendChild(tr);
+        });
+
+        // 3. Failure Mode Diagnostics
+        const failBox = document.getElementById('batch-failures-container');
+        failBox.innerHTML = '';
+        const fails = res.failure_modes || [];
+        if (fails.length > 0) {
+            failBox.innerHTML = '<h4 style="font-size: 1.05rem; color: #fbbf24; margin-bottom: 0.6rem;">⚠️ Empirical Failure Boundary Diagnostics</h4>';
+            fails.forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'alert-banner';
+                div.style.display = 'block';
+                div.innerHTML = `
+                    <div class="alert-title"><span>⚠️</span> Failure Boundary: ${f.method} under ${f.condition} (${f.mean_error_pct}% Error)</div>
+                    <div class="alert-body"><strong>Mechanism:</strong> ${f.failure_mechanism}<br><strong>Engineering Recommendation:</strong> ${f.recommendation}</div>
+                `;
+                failBox.appendChild(div);
+            });
+        }
+
+        // 4. Detailed Trials Table
+        const trialsTbody = document.getElementById('batch-trials-tbody');
+        trialsTbody.innerHTML = '';
+        (res.records || []).forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-family: monospace; font-size: 0.82rem;">${r.specimen_id}</td>
+                <td>${r.surface_type}</td>
+                <td>${r.camera_yaw_deg.toFixed(0)}°</td>
+                <td>${(r.camera_distance_mm / 1000).toFixed(1)}m</td>
+                <td><strong>${r.ground_truth_total_length_mm.toFixed(1)} mm</strong></td>
+                <td>${r.error_2d_pct != null ? r.error_2d_pct.toFixed(1) + '%' : '-'}</td>
+                <td style="font-weight:700; color:#34d399;">${r.error_planar_pct != null ? r.error_planar_pct.toFixed(1) + '%' : '-'}</td>
+                <td>${r.error_3d_pct != null ? r.error_3d_pct.toFixed(1) + '%' : '-'}</td>
+                <td><span class="method-tag ${r.recommended_method==='PLANAR'?'tag-green':(r.recommended_method==='3D'?'tag-purple':'tag-blue')}">${r.recommended_method}</span></td>
+            `;
+            trialsTbody.appendChild(tr);
+        });
+
+    } catch (e) {
+        alert('Batch experiment error: ' + e.message);
+    }
+}
+</script>
+</body>
+</html>

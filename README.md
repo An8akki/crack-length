@@ -49,6 +49,15 @@ InfraVision AI leverages advanced deep learning models (YOLOv8, MobileNetV2) to 
 - Pixel-level damage visualization
 - Automatic material classification
 
+### 📏 Physical Crack Measurement & Tri-Method Calibration
+- **Tri-Method Benchmark**: Side-by-side comparison of 2D Global Scale, Perspective-Rectified Planar Homography, and 3D Surface Arc-Length
+- **Centerline Skeletonization**: Benchmark 3 skeleton engines (Guo-Hall vs. Zhang-Suen vs. Morphological) with graph-theoretic metrics (Network, MST, Dominant Path, Bifurcations)
+- **Planar Homography Rectification**: Interactive 4-point quad or automatic ArUco marker detection to eliminate perspective distortion
+- **Empirical Reliability Engine**: Automated error bound estimation ($\pm \text{mm}$) and 95% Confidence Intervals
+- **Synthetic Validation Studio**: Generate parametric crack specimens with exact analytical ground truth curves and run factorial batch benchmarks
+- **Interactive UI Dashboard**: Dedicated HUD available at `http://localhost:7860/api/crack-length`
+- **Detailed Documentation**: See [docs/PHYSICAL_MEASUREMENT_GUIDE.md](docs/PHYSICAL_MEASUREMENT_GUIDE.md)
+
 ### 🎨 3D Heightmap Generation
 - Convert 2D damage maps to interactive 3D models
 - Export as GLB or STL formats for CAD software
@@ -149,22 +158,20 @@ The frontend will be available at `http://localhost:3000`
 - `POST /api/detect-cracks` - Advanced crack detection with confidence threshold
 - `POST /api/segment-damage` - Instance segmentation of damaged regions
 - `POST /api/classify-material` - Material type classification
-- `POST /api/crack-length` - Standalone crack length estimation (3rd branch)
+### Physical Crack Measurement & Calibration Platform
+The scientific physical measurement branch of InfraVision AI. Converts 2D pixel detections into metric millimeter measurements via 3 distinct physical pathways:
 
-### 3D Generation
-- `POST /api/generate-heightmap` - Create 3D heightmap (GLB format)
-- `POST /api/generate-stl` - Create 3D model (STL format)
-- `GET /api/heightmap-preview` - Get preview image of heightmap
-
-### Crack Length Estimation (3rd Branch)
-Standalone crack length estimation, independent from AI segmentation and 3D construction. Uses the AI model only for segmentation mask extraction, then measures physical crack length via skeletonization and graph analysis.
-
-- `POST /api/crack-length` - Estimate crack length from mask or image
-  - Input: binary mask image OR infrastructure image (auto-segmented)
-  - Skeletonization: `guo_hall` (falls back to `zhang_suen`)
-  - Measurements: network length, main path, MST per skeleton method
-  - Scale: provided `mm_per_px` or auto-calibrated (EXIF/DB/depth)
-  - Output: length in pixels and millimetres, per-method breakdown, topology
+- `GET /api/crack-length` - Interactive browser dashboard for field photo analysis, planar calibration, skeleton comparison, and synthetic validation studio.
+- `POST /api/crack-length` - Full 6-stage physical quantification pipeline:
+  - **Stage 1**: YOLOv8 Crack Detection (Bounding boxes)
+  - **Stage 2**: YOLOv8 Segmentation (Pixel damage mask)
+  - **Stage 3**: 3 Topology Centerline Skeletons (`guo_hall`, `zhang_suen`, `morphological`)
+  - **Stage 4**: Planar Rectification (Homography $H$) & 3D Surface Arc-Length
+  - **Stage 5**: Minimum Spanning Tree (MST) Graph Network
+  - **Stage 6**: Final Annotated Measurement HUD Overlay Image
+  - **Outputs**: Side-by-side comparison of 2D, Planar, and 3D measurements, error estimation bound ($\pm \text{mm}$), 95% Confidence Interval, and empirical reliability status.
+- `POST /api/research/synthetic-specimen` - Generate synthetic crack specimens with exact analytical ground truths under variable camera angles ($0^\circ - 60^\circ$ yaw) and lighting conditions.
+- `POST /api/research/run-batch-trials` - Execute automated factorial benchmark suites across multiple camera geometries (MAE, RMSE, MAPE).
 
 ### Video Processing
 - `POST /api/process-video` - Analyze video file frame-by-frame

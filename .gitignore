@@ -169,9 +169,12 @@ uploads/
 temp/
 tmp/
 *.tmp
+*.err
 logs/
 *.log
 server_output.log
+synthetic_specimens/
+outputs/
 
 # Database Files
 *.db
