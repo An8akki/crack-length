@@ -60,8 +60,13 @@ def main():
     assert stats["max_width_px"] >= stats["min_width_px"], "Width ordering"
     assert report["mean_width_mm"] > 0, "Mean width should be positive"
     assert report["severity"]["severity"] in ("Minor", "Moderate", "Severe")
+    assert "depth_recess" in report, "Depth recess should be present in report"
+    assert report["depth_recess"]["predicted_relative_depth"] > 0, "Predicted relative depth should be positive"
+    assert "interval_90" in report["depth_recess"], "90% Conformal interval should be present"
+    assert report["depth_recess"]["calibration_state"] == "UNCALIBRATED", "Calibration state should be UNCALIBRATED"
+    print(f"[DEPTH MODEL] Validated relative recess prediction: {report['depth_recess']['predicted_relative_depth']:.1f} units")
 
-    print("\n[SUCCESS] All sanity checks passed.")
+    print("\n[SUCCESS] All sanity checks passed (including 3D Depth Recess model).")
 
     # Optional: save visualizations
     if CV2_AVAILABLE:

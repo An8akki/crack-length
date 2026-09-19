@@ -6,6 +6,8 @@ import { Camera, Upload, Play, Loader, PieChart, Target, Activity, TrendingUp, C
 const ImageAnalysis = () => {
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [depthFile, setDepthFile] = useState(null);
+  const [depthPreview, setDepthPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [results, setResults] = useState(null);
@@ -72,6 +74,17 @@ const ImageAnalysis = () => {
       reader.readAsDataURL(file);
       const fileBase64 = await fileBase64Promise;
 
+      let depthBase64 = null;
+      if (depthFile) {
+        const depthReader = new FileReader();
+        const depthPromise = new Promise((resolve, reject) => {
+          depthReader.onload = () => resolve(depthReader.result);
+          depthReader.onerror = (error) => reject(error);
+        });
+        depthReader.readAsDataURL(depthFile);
+        depthBase64 = await depthPromise;
+      }
+
       // Simulate progress
       const progressInterval = setInterval(() => {
         setProgress(prev => Math.min(prev + 10, 90));
@@ -84,6 +97,7 @@ const ImageAnalysis = () => {
         },
         body: JSON.stringify({
           image: fileBase64,
+          depth: depthBase64,
           px_to_cm_ratio: settings.pixelToCmRatio,
           confidence_threshold: settings.confidenceThreshold
         })
@@ -302,6 +316,43 @@ const ImageAnalysis = () => {
                     Minimum confidence for detections
                   </div>
                 </div>
+
+                <div className="setting-item">
+                  <label style={{ display: 'block', fontWeight: 600, color: 'var(--dark)', marginBottom: '0.5rem' }}>
+                    Optional Depth Map
+                  </label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const f = e.target.files[0];
+                        if (f) {
+                          setDepthFile(f);
+                          const r = new FileReader();
+                          r.onloadend = () => setDepthPreview(r.result);
+                          r.readAsDataURL(f);
+                        } else {
+                          setDepthFile(null);
+                          setDepthPreview(null);
+                        }
+                      }}
+                      style={{ fontSize: '0.82rem', padding: '0.35rem', border: '1px solid var(--glass-border)', borderRadius: '4px', background: '#fff', width: '100%' }}
+                    />
+                    {depthFile && (
+                      <button
+                        type="button"
+                        onClick={() => { setDepthFile(null); setDepthPreview(null); }}
+                        style={{ background: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', padding: '4px 8px', fontSize: '0.75rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', marginTop: '0.25rem' }}>
+                    {depthFile ? `Loaded: ${depthFile.name}` : 'Optional 8/16-bit depth map. If omitted, monocular contrast depth is synthesized.'}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -423,7 +474,23 @@ const ImageAnalysis = () => {
                       📊 Depth Analysis
                     </div>
                     {outputImages?.depth_estimation ? (
-                      <img src={outputImages.depth_estimation} alt="Depth Estimation" style={{ width: '100%', height: '300px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
+                      <div>
+                        <img src={outputImages.depth_estimation} alt="Depth Estimation" style={{ width: '100%', height: '260px', objectFit: 'cover', borderRadius: 'var(--border-radius)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
+                        {(results?.crack_quantification?.depth_recess?.predicted_relative_depth ?? results?.depth_recess?.predicted_relative_depth) !== undefined && (
+                          <div style={{ marginTop: '0.6rem', padding: '0.5rem 0.75rem', background: '#f0fdfa', border: '1px solid #ccfbf1', borderRadius: '6px', fontSize: '0.85rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ fontWeight: 600, color: '#0f766e' }}>Relative Crevice Depth (ΔZ):</span>
+                              <strong style={{ fontSize: '1rem', color: '#0f766e' }}>
+                                {(results?.crack_quantification?.depth_recess?.predicted_relative_depth ?? results?.depth_recess?.predicted_relative_depth).toFixed(1)} mm
+                              </strong>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.25rem', fontSize: '0.75rem', color: '#64748b' }}>
+                              <span>{(results?.crack_quantification?.depth_recess?.reliability || results?.depth_recess?.reliability || 'ESTIMATED').replace('_', ' ')}</span>
+                              <span>90% CI: [{(results?.crack_quantification?.depth_recess?.interval_90 || results?.depth_recess?.interval_90 || [0,0])[0]?.toFixed(1)}, {(results?.crack_quantification?.depth_recess?.interval_90 || results?.depth_recess?.interval_90 || [0,0])[1]?.toFixed(1)}] mm</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <div style={{ width: '100%', height: '300px', background: 'rgba(209, 213, 219, 0.5)', borderRadius: 'var(--border-radius)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#a0a0a0', fontSize: '0.9rem' }}>Processing...</div>
                     )}
@@ -479,22 +546,50 @@ const ImageAnalysis = () => {
           )}
           {results.crack_quantification && (
             <div className="card" style={{ marginBottom: '2rem', borderLeft: '4px solid #0f766e' }}>
-              <div className="card-header">
-                <h2 style={{ margin: 0 }}>Crack Centreline Length</h2>
-                <p style={{ margin: '0.25rem 0 0', color: 'var(--secondary)', fontSize: '0.875rem' }}>
-                  Measured from the segmentation mask, not from the bounding box
-                </p>
+              <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem' }}>
+                <div>
+                  <h2 style={{ margin: 0 }}>Crack Centreline Length & 3D Depth Recess</h2>
+                  <p style={{ margin: '0.25rem 0 0', color: 'var(--secondary)', fontSize: '0.875rem' }}>
+                    Multi-modal quantification: Centreline length from segmentation mask & relative crevice depth (ΔZ)
+                  </p>
+                </div>
+                {(results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability) && (
+                  <span style={{
+                    padding: '4px 12px',
+                    borderRadius: '20px',
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.5px',
+                    background: (results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability) === 'HIGH_RELIABILITY' ? 'rgba(34, 197, 94, 0.15)' : (results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability) === 'MEDIUM_RELIABILITY' ? 'rgba(234, 179, 8, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                    color: (results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability) === 'HIGH_RELIABILITY' ? '#16a34a' : (results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability) === 'MEDIUM_RELIABILITY' ? '#ca8a04' : '#dc2626',
+                    border: `1px solid ${(results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability) === 'HIGH_RELIABILITY' ? '#16a34a' : (results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability) === 'MEDIUM_RELIABILITY' ? '#ca8a04' : '#dc2626'}`
+                  }}>
+                    Depth: {(results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability).replace('_', ' ')}
+                  </span>
+                )}
               </div>
               <div className="card-body">
                 {results.crack_quantification.available ? (
                   <>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
                       <div><span>Pixel network length</span><strong style={{ display: 'block', fontSize: '1.4rem' }}>{results.crack_quantification.total_pixel_length?.toFixed(2)} px</strong></div>
                       <div><span>Scale</span><strong style={{ display: 'block', fontSize: '1.4rem' }}>{results.crack_quantification.scale?.mm_per_px ? `${results.crack_quantification.scale.mm_per_px.toFixed(4)} mm/px` : 'Unavailable'}</strong></div>
                       <div><span>Physical length</span><strong style={{ display: 'block', fontSize: '1.4rem' }}>{results.crack_quantification.total_length_mm ? `${results.crack_quantification.total_length_mm.toFixed(2)} mm` : 'Pixel-only'}</strong></div>
+                      <div>
+                        <span>3D Depth Recess (ΔZ)</span>
+                        <strong style={{ display: 'block', fontSize: '1.4rem', color: '#0f766e' }}>
+                          {(results.crack_quantification?.depth_recess?.predicted_relative_depth ?? results.depth_recess?.predicted_relative_depth) !== undefined ? `${(results.crack_quantification?.depth_recess?.predicted_relative_depth ?? results.depth_recess?.predicted_relative_depth).toFixed(1)} mm` : 'N/A'}
+                        </strong>
+                        {(results.crack_quantification?.depth_recess?.interval_90 || results.depth_recess?.interval_90) && (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--secondary)' }}>
+                            90% CI: [{(results.crack_quantification?.depth_recess?.interval_90 || results.depth_recess?.interval_90)[0]?.toFixed(1)}, {(results.crack_quantification?.depth_recess?.interval_90 || results.depth_recess?.interval_90)[1]?.toFixed(1)}] mm
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p style={{ marginBottom: 0, color: '#9a3412', fontSize: '0.85rem' }}>
-                      Method: {results.crack_quantification.path_method} + network graph. Scale: {results.crack_quantification.scale?.method || 'not recovered'} ({results.crack_quantification.scale?.confidence || 'low confidence'}).
+                      Method: {results.crack_quantification.path_method} + network graph. Scale: {results.crack_quantification.scale?.method || 'not recovered'} ({results.crack_quantification.scale?.confidence || 'low confidence'}). Depth model: ExtraTrees Champion (Crevice depth in mm).
                     </p>
                   </>
                 ) : (
@@ -548,6 +643,13 @@ const ImageAnalysis = () => {
                     value={results.data_science_insights?.statistical_summary?.maintenance_urgency || 'Low'}
                     subtitle="Recommended action"
                     color={results.data_science_insights?.statistical_summary?.maintenance_urgency === 'High' ? 'danger' : results.data_science_insights?.statistical_summary?.maintenance_urgency === 'Medium' ? 'warning' : 'success'}
+                  />
+                  <MetricCard
+                    icon={Activity}
+                    title="3D Crevice Depth"
+                    value={(results.crack_quantification?.depth_recess?.predicted_relative_depth ?? results.depth_recess?.predicted_relative_depth) !== undefined ? `${(results.crack_quantification?.depth_recess?.predicted_relative_depth ?? results.depth_recess?.predicted_relative_depth).toFixed(1)} mm` : 'N/A'}
+                    subtitle={(results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability) ? `${(results.crack_quantification?.depth_recess?.reliability || results.depth_recess?.reliability).replace('_', ' ')} (90% CI)` : '3D Crevice Depth'}
+                    color="warning"
                   />
                 </div>
               </div>

@@ -1,0 +1,1 @@
+"""Core mathematical and algorithmic modules for crack depth estimation."""

@@ -144,6 +144,9 @@ def main():
     parser.add_argument("--focal-mm", type=float, default=None)
     parser.add_argument("--sensor-mm", type=float, default=None)
     parser.add_argument("--distance-mm", type=float, default=None)
+
+    # 3D Depth estimation option
+    parser.add_argument("--depth", default=None, help="Optional path to 8-bit depth map for relative recess estimation")
     args = parser.parse_args()
 
     if not os.path.exists(args.image):
@@ -167,7 +170,7 @@ def main():
         print("  No crack pixels detected. Nothing to quantify.")
         return
 
-# ---- C. Scale recovery (mm per pixel) ----
+    # ---- C. Scale recovery (mm per pixel) ----
     # If the user supplies --mm-per-px, use it directly.
     # Otherwise, AUTO-CALIBRATE: read EXIF -> camera DB -> estimate distance.
     mm_per_px = args.mm_per_px
@@ -207,7 +210,7 @@ def main():
     # ---- D. Quantify the mask (length / width / area / severity) ----
     from .quantify import quantify_crack, format_report
 
-    report = quantify_crack(mask, mm_per_px=mm_per_px)
+    report = quantify_crack(mask, mm_per_px=mm_per_px, image_rgb=image_rgb)
 
     # ---- E. Report + XAI line ----
     print("\n" + "=" * 60)
@@ -238,6 +241,28 @@ def main():
 
     print("\n[Explainable AI - how mm/px was obtained]")
     print(explain_scale(method, xai_inputs))
+
+    # ---- F. Optional 3D Relative Recess Estimation ----
+    if args.depth:
+        print("\n" + "=" * 60)
+        print("          3D RELATIVE RECESS & DEPTH ESTIMATION")
+        print("=" * 60)
+        from .recess_depth import estimate_crack_recess
+        try:
+            depth_res = estimate_crack_recess(image_rgb=image_rgb, mask=mask, depth_map=args.depth)
+            print(f"Predicted Relative Depth: {depth_res.predicted_relative_depth:.2f} sensor-depth units")
+            print(f"Prediction Interval 90%:  [{depth_res.interval_90[0]:.2f}, {depth_res.interval_90[1]:.2f}] sensor units")
+            print(f"Prediction Interval 80%:  [{depth_res.interval_80[0]:.2f}, {depth_res.interval_80[1]:.2f}] sensor units")
+            print(f"Reliability Tier:         {depth_res.reliability}")
+            print("Reliability Assessment:")
+            for reason in depth_res.reliability_reasons:
+                print(f"  - {reason}")
+            print("-" * 60)
+            print("Physical Crack Depth:     NOT AVAILABLE (Software-Only Scope)")
+            print(f"System Calibration State: {depth_res.calibration_state}")
+        except Exception as e:
+            print(f"Depth estimation failed: {e}")
+        print("=" * 60)
 
 
 if __name__ == "__main__":

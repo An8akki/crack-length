@@ -1609,6 +1609,28 @@ def analyze():
         
         print(f"✅ Image decoded successfully: shape {image_np.shape}")
 
+        # Ingest optional depth map (base64)
+        depth_np = None
+        depth_data = data.get('depth') or data.get('depth_map')
+        if depth_data:
+            try:
+                if depth_data.startswith('data:image'):
+                    depth_data = depth_data.split(',', 1)[1]
+                depth_bytes = base64.b64decode(depth_data)
+                if cv2 is not None:
+                    depth_np = cv2.imdecode(np.frombuffer(depth_bytes, np.uint8), cv2.IMREAD_UNCHANGED)
+                if depth_np is None:
+                    from PIL import Image as PILImage
+                    depth_np = np.array(PILImage.open(io.BytesIO(depth_bytes)))
+                if depth_np.ndim == 3:
+                    depth_np = cv2.cvtColor(depth_np, cv2.COLOR_BGR2GRAY) if cv2 else depth_np[:, :, 0]
+                if depth_np.shape[:2] != image_np.shape[:2]:
+                    depth_np = cv2.resize(depth_np, (image_np.shape[1], image_np.shape[0]), interpolation=cv2.INTER_NEAREST) if cv2 else depth_np
+                print(f"✅ Depth map decoded successfully: shape {depth_np.shape}")
+            except Exception as e_d:
+                print(f"⚠️ Failed to decode depth map in /api/analyze: {e_d}")
+                depth_np = None
+
         # Preserve the original file bytes so EXIF can be inspected for the
         # optional 1x camera-scale estimate. OpenCV decoding discards EXIF.
         scale_image_path = None
@@ -1648,12 +1670,13 @@ def analyze():
                 segmented_image = image_np.copy()  # Fallback to original image
 
             # This is the missing length stage: use the actual segmentation
-            # mask, skeletonize it, and measure centreline graph length.
+            # mask, skeletonize it, and measure centreline graph length & relative crevice depth.
             if CRACK_QUANTIFICATION_AVAILABLE:
                 crack_quantification = quantify_segmentation(
                     seg_results, image_np.shape, image_rgb=image_np,
                     image_path=scale_image_path,
-                    fallback_segmented_image=segmented_image
+                    fallback_segmented_image=segmented_image,
+                    depth_map=depth_np
                 )
             else:
                 crack_quantification = {
@@ -1664,8 +1687,8 @@ def analyze():
             
             # 4. Depth Estimation
             print("   [4/6] Estimating depth...")
-            preprocessed = preprocess_image_for_depth_estimation(image_np)
-            depth_heatmap = create_depth_estimation_heatmap(preprocessed)
+            depth_input = depth_np if depth_np is not None else preprocess_image_for_depth_estimation(image_np)
+            depth_heatmap = create_depth_estimation_heatmap(depth_input)
             
             # 5. Edge Detection
             print("   [5/6] Detecting edges...")
@@ -1807,6 +1830,8 @@ def analyze():
                 }
             },
             "crack_quantification": crack_quantification,
+            "depth_recess": crack_quantification.get("depth_recess") if isinstance(crack_quantification, dict) else None,
+            "relative_depth": (crack_quantification.get("depth_recess") or {}).get("predicted_relative_depth") if isinstance(crack_quantification, dict) else None,
             "biological_growth": growth_analysis,
             "material_analysis": material_analysis,
             "environmental_impact_assessment": {
@@ -3382,6 +3407,18 @@ def crack_length():
         if raw_bytes is None:
             return jsonify({"status": "error", "reason": "No image provided. Please upload a raw image."}), 400
 
+        # Ingest optional depth map (file or base64)
+        depth_bytes = None
+        depth_file_obj = request.files.get('depth') or request.files.get('depth_map')
+        if depth_file_obj and depth_file_obj.filename != '':
+            depth_bytes = depth_file_obj.read()
+        if depth_bytes is None:
+            d_b64 = json_data.get('depth') or json_data.get('depth_map') or request.form.get('depth')
+            if d_b64:
+                if d_b64.startswith('data:image'):
+                    d_b64 = d_b64.split(',', 1)[1]
+                depth_bytes = base64.b64decode(d_b64)
+
         # Decode image
         if cv2 is not None:
             bgr = cv2.imdecode(np.frombuffer(raw_bytes, np.uint8), cv2.IMREAD_COLOR)
@@ -3582,12 +3619,53 @@ def crack_length():
         mst_2d_mm = float(graph["mst_length_px"]) * s_val
 
         # -------------------------------------------------------------
-        # STAGE 4: 3D PLANAR STRUCTURE & RECONSTRUCTION
         # -------------------------------------------------------------
-        print("🌐 Stage 4: 3D planar reconstruction...")
+        # STAGE 4: 3D PLANAR STRUCTURE & RECONSTRUCTION + RECESS ESTIMATION
+        # -------------------------------------------------------------
+        print("🌐 Stage 4: 3D planar reconstruction & crevice recess estimation...")
         preprocessed = preprocess_image_for_depth_estimation(cv2.cvtColor(image_rgb, cv2.COLOR_RGB2BGR) if cv2 else image_rgb)
-        depth_heatmap = create_depth_estimation_heatmap(preprocessed)
+
+        # Decode uploaded depth map if provided, otherwise use preprocessed monocular depth
+        depth_raw_img = None
+        if depth_bytes:
+            try:
+                if cv2 is not None:
+                    depth_raw_img = cv2.imdecode(np.frombuffer(depth_bytes, np.uint8), cv2.IMREAD_UNCHANGED)
+                if depth_raw_img is None:
+                    depth_raw_img = np.array(PILImage.open(io.BytesIO(depth_bytes)))
+                if depth_raw_img.ndim == 3:
+                    depth_raw_img = cv2.cvtColor(depth_raw_img, cv2.COLOR_BGR2GRAY) if cv2 else depth_raw_img[:, :, 0]
+                if depth_raw_img.shape[:2] != (h, w):
+                    depth_raw_img = cv2.resize(depth_raw_img, (w, h), interpolation=cv2.INTER_NEAREST) if cv2 else depth_raw_img
+            except Exception as e_dec_depth:
+                print(f"⚠️ Failed to decode depth map: {e_dec_depth}")
+                depth_raw_img = None
+
+        depth_map_for_recess = depth_raw_img if depth_raw_img is not None else preprocessed
+        depth_heatmap = create_depth_estimation_heatmap(depth_map_for_recess)
         stage_images["stage4_depth_3d"] = image_to_base64_data(cv2.cvtColor(depth_heatmap, cv2.COLOR_BGR2RGB) if cv2 else depth_heatmap)
+
+        # Estimate relative crack crevice recess (ΔZ) via ExtraTrees champion model
+        recess_data = None
+        try:
+            from crack_quantification.recess_depth import estimate_crack_recess
+            recess_res = estimate_crack_recess(image_rgb, mask, depth_map_for_recess)
+            recess_data = {
+                "predicted_relative_depth": float(recess_res.predicted_relative_depth),
+                "unit": "mm",
+                "interval_80": list(recess_res.interval_80),
+                "interval_90": list(recess_res.interval_90),
+                "interval_95": list(recess_res.interval_95),
+                "reliability": recess_res.reliability,
+                "reliability_reasons": recess_res.reliability_reasons,
+                "calibration_state": recess_res.calibration_state,
+                "is_monocular_fallback": depth_raw_img is None,
+                "physical_depth_mm": float(recess_res.predicted_relative_depth),
+                "physical_depth_status": "ESTIMATED_MM"
+            }
+            print(f"📊 Crack recess depth estimated: {recess_res.predicted_relative_depth:.2f} mm ({recess_res.reliability})")
+        except Exception as e_recess:
+            print(f"⚠️ Crack recess depth estimation error: {e_recess}")
 
         length_3d_mm = length_2d_mm
         main_branch_3d_mm = main_path_2d_mm
@@ -3796,25 +3874,30 @@ def crack_length():
             dil_center = cv2.dilate(active_skel.astype(np.uint8), np.ones((2, 2), np.uint8))
             final_img[dil_center > 0] = [0, 255, 0]
 
-            hud_height = 92
+            hud_height = 110
             hud_bg = np.zeros((hud_height, w, 3), dtype=np.uint8)
             hud_bg[:] = [15, 23, 42]
             final_img[:hud_height, :] = cv2.addWeighted(final_img[:hud_height, :], 0.15, hud_bg, 0.85, 0)
             cv2.line(final_img, (0, hud_height), (w, hud_height), (2, 132, 199), 2)
 
             font = cv2.FONT_HERSHEY_SIMPLEX
-            cv2.putText(final_img, "INFRAVISION AI  |  CRACK QUANTIFICATION & TRI-METHOD COMPARISON", (16, 22), font, 0.52, (56, 189, 248), 2)
+            cv2.putText(final_img, "INFRAVISION AI  |  CRACK QUANTIFICATION & MULTI-MODAL 3D AUDIT", (16, 22), font, 0.52, (56, 189, 248), 2)
             
             p_len_txt = f"{planar_data['network_length_mm']:.1f} mm" if planar_data else "N/A (No ref)"
             cal_str = "CALIBRATED" if is_physical_scale_calibrated else "UNCALIBRATED"
             txt_row1 = f"2D: {length_2d_mm:.1f} mm ({cal_str})   |   Planar: {p_len_txt}   |   3D: {length_3d_mm:.1f} mm"
-            cv2.putText(final_img, txt_row1, (16, 46), font, 0.44, (255, 255, 255), 1)
+            cv2.putText(final_img, txt_row1, (16, 45), font, 0.44, (255, 255, 255), 1)
 
             p_eval_txt = f"Planarity: {planarity_eval['label']} ({planarity_eval['score']:.0f}%)   |   Recommended: {planarity_eval['recommended_method']}"
-            cv2.putText(final_img, p_eval_txt, (16, 66), font, 0.40, (147, 197, 253), 1)
+            cv2.putText(final_img, p_eval_txt, (16, 65), font, 0.40, (147, 197, 253), 1)
 
             txt_row3 = f"Mean Width: {width_mm:.2f} mm   |   Max Width: {width_max_mm:.2f} mm   |   Area: {area_mm2:.1f} mm2"
             cv2.putText(final_img, txt_row3, (16, 84), font, 0.38, (52, 211, 153), 1)
+
+            if recess_data:
+                depth_src = "Depth Map" if not recess_data["is_monocular_fallback"] else "Mono Relief"
+                txt_row4 = f"3D Recess: {recess_data['predicted_relative_depth']:.1f} mm (90% CI: [{recess_data['interval_90'][0]:.1f}, {recess_data['interval_90'][1]:.1f}] mm)  |  {recess_data['reliability']}  |  {depth_src}"
+                cv2.putText(final_img, txt_row4, (16, 102), font, 0.38, (251, 191, 36), 1)
         stage_images["stage6_final_estimated"] = image_to_base64_data(final_img)
 
         # -------------------------------------------------------------
@@ -3880,7 +3963,8 @@ def crack_length():
                 "camera_distance_mm": distance_mm,
                 "focal_length_mm": focal_length_mm,
                 "depth_relief_applied": True,
-            }
+            },
+            "depth_recess": recess_data,
         }
 
         # Scientific Reliability Prediction & Adaptive Method Selection
@@ -3938,6 +4022,10 @@ def crack_length():
             "stage_images": stage_images,
             "calibration_status": calib_summary,
             "measurements": tri_measurements,
+            "depth_recess": recess_data,
+            "relative_depth": recess_data["predicted_relative_depth"] if recess_data else None,
+            "depth_interval_90": recess_data["interval_90"] if recess_data else None,
+            "depth_reliability": recess_data["reliability"] if recess_data else None,
             "research_comparison": research_comp,
             "planarity": planarity_eval,
             "reliability_prediction": rel_pred,

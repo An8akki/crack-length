@@ -81,7 +81,7 @@ def masks_from_segmentation_results(seg_results, image_shape, fallback_mask=None
 
 
 def quantify_segmentation(seg_results, image_shape, image_rgb=None, image_path=None,
-                          distance_mm=None, fallback_segmented_image=None):
+                          distance_mm=None, fallback_segmented_image=None, depth_map=None):
     """Measure every segmentation mask and recover a documented 1x scale."""
     masks = masks_from_segmentation_results(seg_results, image_shape, fallback_mask=fallback_segmented_image)
     if not masks:
@@ -169,6 +169,42 @@ def quantify_segmentation(seg_results, image_shape, image_rgb=None, image_path=N
     }
     if scale and scale.get("mm_per_px"):
         report["total_length_mm"] = total_network_px * scale["mm_per_px"]
+
+    # 3D Relative Depth / Recess Estimation
+    if image_rgb is not None and len(masks) > 0:
+        try:
+            from .recess_depth import estimate_crack_recess
+            combined_mask = np.zeros(image_rgb.shape[:2], dtype=np.uint8)
+            for m in masks:
+                combined_mask = np.maximum(combined_mask, m.astype(np.uint8))
+
+            d_input = depth_map
+            if d_input is None:
+                try:
+                    import cv2
+                    gray = cv2.cvtColor(image_rgb, cv2.COLOR_RGB2GRAY) if cv2 else image_rgb[:, :, 0]
+                    d_input = cv2.equalizeHist(gray) if cv2 else gray
+                except Exception:
+                    d_input = image_rgb[:, :, 0]
+
+            recess_res = estimate_crack_recess(image_rgb, combined_mask, d_input)
+            report["depth_recess"] = {
+                "predicted_relative_depth": float(recess_res.predicted_relative_depth),
+                "unit": recess_res.unit,
+                "interval_80": list(recess_res.interval_80),
+                "interval_90": list(recess_res.interval_90),
+                "interval_95": list(recess_res.interval_95),
+                "reliability": recess_res.reliability,
+                "reliability_reasons": recess_res.reliability_reasons,
+                "calibration_state": recess_res.calibration_state,
+                "is_monocular_fallback": depth_map is None,
+                "physical_depth_mm": float(recess_res.predicted_relative_depth),
+            }
+            report["relative_depth_recess"] = float(recess_res.predicted_relative_depth)
+            report["depth_reliability"] = recess_res.reliability
+        except Exception as e_depth:
+            report["depth_recess"] = {"available": False, "error": str(e_depth)}
+
     return report
 
 

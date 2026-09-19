@@ -19,7 +19,7 @@ from .calibration import Calibration
 from .severity import assess_severity, compute_orientation_and_branches
 
 
-def quantify_crack(mask: np.ndarray, mm_per_px: float = None) -> dict:
+def quantify_crack(mask: np.ndarray, mm_per_px: float = None, image_rgb: np.ndarray = None, depth_map: np.ndarray = None) -> dict:
     """
     Run the full crack quantification pipeline on a binary mask.
 
@@ -83,6 +83,40 @@ def quantify_crack(mask: np.ndarray, mm_per_px: float = None) -> dict:
 
     orientation = compute_orientation_and_branches(skeleton)
 
+    # ---- 7. 3D Relative Crevice Recess & Depth ----
+    depth_recess = None
+    try:
+        from .recess_depth import estimate_crack_recess
+        if image_rgb is None:
+            h, w = binary.shape[:2]
+            rgb_proxy = np.full((h, w, 3), 160, dtype=np.uint8)
+            rgb_proxy[binary] = 40
+        else:
+            rgb_proxy = image_rgb
+
+        if depth_map is None:
+            h, w = binary.shape[:2]
+            d_proxy = np.full((h, w), 128, dtype=np.uint8)
+            d_proxy[binary] = 80
+        else:
+            d_proxy = depth_map
+
+        recess_res = estimate_crack_recess(rgb_proxy, binary.astype(np.uint8), d_proxy)
+        depth_recess = {
+            "predicted_relative_depth": float(recess_res.predicted_relative_depth),
+            "unit": recess_res.unit,
+            "interval_80": list(recess_res.interval_80),
+            "interval_90": list(recess_res.interval_90),
+            "interval_95": list(recess_res.interval_95),
+            "reliability": recess_res.reliability,
+            "reliability_reasons": recess_res.reliability_reasons,
+            "calibration_state": recess_res.calibration_state,
+            "is_monocular_fallback": depth_map is None,
+            "physical_depth_mm": None,
+        }
+    except Exception as e_depth:
+        depth_recess = {"available": False, "error": str(e_depth)}
+
     report = {
         "length_px": length["length_px"],
         "length_mm": length_mm,
@@ -98,6 +132,9 @@ def quantify_crack(mask: np.ndarray, mm_per_px: float = None) -> dict:
         "branches": orientation["branches"],
         "endpoints": orientation["endpoints"],
         "calibration_mm_per_px": cal.mm_per_px if cal else None,
+        "depth_recess": depth_recess,
+        "relative_depth": depth_recess["predicted_relative_depth"] if depth_recess and "predicted_relative_depth" in depth_recess else None,
+        "depth_reliability": depth_recess["reliability"] if depth_recess and "reliability" in depth_recess else None,
     }
 
     return report
@@ -133,4 +170,6 @@ def format_report(report: dict, image_id: str = "Image 001") -> str:
         f"Orientation     : {report['orientation_deg']:.0f}°",
         f"Branches        : {report['branches']}",
     ]
+    if report.get("depth_recess") and "predicted_relative_depth" in report["depth_recess"]:
+        lines.append(f"Depth Recess    : {report['depth_recess']['predicted_relative_depth']:.1f} mm ({report['depth_recess']['reliability']})")
     return "\n".join(lines)

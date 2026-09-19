@@ -84,8 +84,8 @@
         .calib-item-label { font-size: 0.74rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; }
         .calib-item-val { font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-top: 0.2rem; }
 
-        /* Tri-Method Side-by-Side Cards */
-        .tri-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-top: 1rem; }
+        /* Tri-Method / Multi-Modal Side-by-Side Cards */
+        .tri-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; margin-top: 1rem; }
         @media(max-width: 900px) { .tri-grid { grid-template-columns: 1fr; } }
         
         .method-card { background: rgba(15, 23, 42, 0.75); border: 1.5px solid #334155; border-radius: 14px; padding: 1.4rem; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.25s; }
@@ -93,6 +93,8 @@
         .method-card.hero { border-color: #10b981; background: rgba(16, 185, 129, 0.06); box-shadow: 0 0 25px rgba(16, 185, 129, 0.15); }
         .method-card.hero::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #10b981, #38bdf8); }
         .method-card.blue::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #0284c7; }
+        .method-card.amber::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #f59e0b; }
+        .method-card.amber { border-color: rgba(245, 158, 11, 0.4); background: rgba(245, 158, 11, 0.05); }
         .method-card.purple::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: #a855f7; }
 
         .method-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
@@ -183,6 +185,23 @@
                 <input type="file" id="image-file" accept="image/*" onchange="imageSelected(this)">
             </div>
 
+            <!-- Optional Synchronized Depth Map Upload -->
+            <div style="margin-top: 1rem; padding: 0.85rem 1.2rem; background: rgba(15, 23, 42, 0.6); border: 1px dashed rgba(251, 191, 36, 0.4); border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                    <span style="font-size: 1.3rem;">📊</span>
+                    <div>
+                        <strong style="color: #fbbf24; font-size: 0.92rem;">3D Depth Map (Optional)</strong>
+                        <div style="color: #94a3b8; font-size: 0.8rem;">Upload synchronized 8-bit depth map for precise 3D crevice recess. If omitted, monocular depth relief is used automatically.</div>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <span id="depth-file-name" style="color: #34d399; font-size: 0.82rem; font-weight: 500;"></span>
+                    <input type="file" id="depth-file" accept="image/*" style="display: none;" onchange="depthSelected(this)">
+                    <button type="button" class="btn-secondary" style="border-color: #fbbf24; color: #fbbf24;" onclick="document.getElementById('depth-file').click()">Select Depth Map</button>
+                    <button type="button" id="clear-depth-btn" class="btn-secondary" style="display: none; padding: 0.3rem 0.6rem;" onclick="clearDepthFile()">✕</button>
+                </div>
+            </div>
+
             <!-- Interactive 4-Point Canvas Setup -->
             <div class="preview-container" id="preview-container">
                 <div class="preview-wrapper">
@@ -242,7 +261,7 @@
                         <input type="number" id="focal-input" placeholder="28 mm" value="28" step="any">
                     </div>
                     <div class="form-group">
-                        <label>Sensor Width (mm)</label>
+                        <label>Camera Frame Width (mm)</label>
                         <input type="number" id="sensor-input" placeholder="36 mm (Full Frame)" value="36" step="any">
                     </div>
                 </div>
@@ -430,6 +449,25 @@
                             <div class="metric-row"><span>Sanity Ratio:</span><strong id="m-3d-sanity">-</strong></div>
                             <div class="metric-row"><span>Camera Distance:</span><strong id="m-3d-dist">1000 mm</strong></div>
                             <div class="metric-row"><span>Surface Relief:</span><strong id="m-3d-relief">Relief Applied</strong></div>
+                        </div>
+                    </div>
+
+                    <!-- 4. 3D Crevice Depth Recess Method -->
+                    <div class="method-card amber">
+                        <div>
+                            <div class="method-header">
+                                <strong style="color: #fbbf24; font-size: 1rem;">3D Crevice Depth (ΔZ)</strong>
+                                <span class="method-tag tag-amber" id="tag-depth" style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3);">Depth Recess</span>
+                            </div>
+                            <div class="method-main-val" id="val-depth-recess" style="color: #fbbf24;">- mm</div>
+                            <div class="method-sub-desc" id="desc-depth">Crevice recess depth estimation</div>
+                        </div>
+                        <div class="method-metrics">
+                            <div class="metric-row"><span>90% Conformal Bound:</span><strong id="m-depth-int90">-</strong></div>
+                            <div class="metric-row"><span>80% Conformal Bound:</span><strong id="m-depth-int80">-</strong></div>
+                            <div class="metric-row"><span>Reliability Tier:</span><strong id="m-depth-rel">-</strong></div>
+                            <div class="metric-row"><span>Depth Channel:</span><strong id="m-depth-src">Monocular Depth</strong></div>
+                            <div class="metric-row"><span>Calibration Status:</span><strong id="m-depth-calib" style="color: #f59e0b;">ESTIMATED</strong></div>
                         </div>
                     </div>
                 </div>
@@ -868,6 +906,23 @@ function imageSelected(input) {
     }
 }
 
+let selectedDepthFile = null;
+
+function depthSelected(input) {
+    if (input.files && input.files[0]) {
+        selectedDepthFile = input.files[0];
+        document.getElementById('depth-file-name').innerText = '✓ Depth: ' + selectedDepthFile.name;
+        document.getElementById('clear-depth-btn').style.display = 'inline-block';
+    }
+}
+
+function clearDepthFile() {
+    selectedDepthFile = null;
+    document.getElementById('depth-file').value = '';
+    document.getElementById('depth-file-name').innerText = '';
+    document.getElementById('clear-depth-btn').style.display = 'none';
+}
+
 // Drag & drop support
 const dropzone = document.getElementById('dropzone-box');
 dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.style.borderColor = '#38bdf8'; });
@@ -1037,6 +1092,10 @@ async function runPipeline() {
     const gt = document.getElementById('gt-input').value;
     if (gt) formData.append('ground_truth_mm', gt);
 
+    if (selectedDepthFile) {
+        formData.append('depth', selectedDepthFile);
+    }
+
     document.getElementById('loading').style.display = 'block';
     document.getElementById('results').style.display = 'none';
     document.getElementById('run-btn').disabled = true;
@@ -1135,6 +1194,39 @@ async function runPipeline() {
         document.getElementById('m-3d-main').innerText = (m3d.main_branch_mm || data.main_branch_3d_mm || 0).toFixed(1) + ' mm';
         document.getElementById('m-3d-sanity').innerText = (m3d.sanity_ratio || data.sanity_ratio || 1.0) + 'x';
         document.getElementById('m-3d-dist').innerText = (m3d.camera_distance_mm || 1000) + ' mm';
+
+        // Populate Depth Recess Card
+        const recData = data.depth_recess;
+        if (recData && recData.predicted_relative_depth != null) {
+            document.getElementById('val-depth-recess').innerText = recData.predicted_relative_depth.toFixed(1) + ' mm';
+            if (recData.interval_90 && recData.interval_90.length === 2) {
+                document.getElementById('m-depth-int90').innerText = `[${recData.interval_90[0].toFixed(1)}, ${recData.interval_90[1].toFixed(1)}] mm`;
+            }
+            if (recData.interval_80 && recData.interval_80.length === 2) {
+                document.getElementById('m-depth-int80').innerText = `[${recData.interval_80[0].toFixed(1)}, ${recData.interval_80[1].toFixed(1)}] mm`;
+            }
+            
+            const relBadge = document.getElementById('m-depth-rel');
+            relBadge.innerText = recData.reliability || 'BORDERLINE';
+            if (recData.reliability === 'HIGH' || recData.reliability === 'RELIABLE') {
+                relBadge.style.color = '#34d399';
+            } else if (recData.reliability === 'BORDERLINE') {
+                relBadge.style.color = '#fbbf24';
+            } else {
+                relBadge.style.color = '#f43f5e';
+            }
+            
+            document.getElementById('m-depth-src').innerText = recData.is_monocular_fallback ? 'Monocular Depth' : 'Depth Map';
+            document.getElementById('m-depth-calib').innerText = recData.calibration_state || 'ESTIMATED';
+            document.getElementById('desc-depth').innerText = recData.is_monocular_fallback 
+                ? 'Monocular relief recess estimation' 
+                : 'Crevice recess depth estimation';
+        } else {
+            document.getElementById('val-depth-recess').innerText = '-';
+            document.getElementById('m-depth-int90').innerText = '-';
+            document.getElementById('m-depth-int80').innerText = '-';
+            document.getElementById('m-depth-rel').innerText = '-';
+        }
 
         // 5. Research Table
         const resComp = data.research_comparison;

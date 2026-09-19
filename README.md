@@ -58,6 +58,18 @@ InfraVision AI leverages advanced deep learning models (YOLOv8, MobileNetV2) to 
 - **Interactive UI Dashboard**: Dedicated HUD available at `http://localhost:7860/api/crack-length`
 - **Detailed Documentation**: See [docs/PHYSICAL_MEASUREMENT_GUIDE.md](docs/PHYSICAL_MEASUREMENT_GUIDE.md)
 
+### 🕳️ Relative Crack Depth & Crevice Recess Estimation (Software-Only)
+- **Relative Optical Recess ($\Delta Z$)**: Estimates crevice depth displacement below the local concrete surface datum fitted via RANSAC on the surrounding intact concrete ring ($5\text{--}20\text{ px}$).
+- **Frozen Machine Learning Model**: Uses a regularized Extra Trees Regressor ($100$ trees, max depth $8$, min leaf $2$) operating on the **Top-25 independent features** (zero target leakage).
+- **Split Conformal Prediction Intervals**: Distribution-free uncertainty intervals providing guaranteed empirical coverage:
+  - 80% Confidence: $\pm 12.98$ sensor units ($79.9\%$ empirical coverage)
+  - 90% Confidence: $\pm 22.35$ sensor units ($90.0\%$ empirical coverage)
+  - 95% Confidence: $\pm 32.67$ sensor units ($94.9\%$ empirical coverage)
+- **Explainable Reliability Engine**: Transparent 5-tier classification (`HIGH`, `RELIABLE`, `BORDERLINE`, `UNRELIABLE`, `INVALID`) based on optical aperture width, sensor dropout, and flanking surface roughness.
+- **Integrated CLI & Pipeline**: Pass `--depth <path>` to `crack_quantification.integrate_pipeline` for unified length, width, area, and relative depth analysis.
+- **Python API**: Import `from crack_depth import FinalCrackPredictor` or `from crack_quantification import estimate_crack_recess`.
+- **Detailed Scientific Documentation**: See [docs/depth_estimation/PHASE5_FINAL_STATUS.md](docs/depth_estimation/PHASE5_FINAL_STATUS.md) and [docs/depth_estimation/phase5_15_leakage_audit.md](docs/depth_estimation/phase5_15_leakage_audit.md).
+
 ### 🎨 3D Heightmap Generation
 - Convert 2D damage maps to interactive 3D models
 - Export as GLB or STL formats for CAD software

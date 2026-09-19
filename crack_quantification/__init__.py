@@ -50,6 +50,8 @@ from .reference_scale import (
     polyline_length_on_reference_plane,
 )
 from .depth_3d import crack_length_from_depth
+from .recess_depth import estimate_crack_recess
+from crack_depth import FinalCrackPredictor, FinalPredictionResult
 
 __all__ = [
     "skeletonize_mask",
@@ -67,6 +69,9 @@ __all__ = [
     "homography_from_reference",
     "polyline_length_on_reference_plane",
     "crack_length_from_depth",
+    "estimate_crack_recess",
+    "FinalCrackPredictor",
+    "FinalPredictionResult",
 ]
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
