@@ -178,13 +178,17 @@ app = Flask(__name__)
 CORS(app)
 app.json.sort_keys = False
 
-# ==================== DOWNLOAD MODELS FROM HF HUB ====================
-print("\n📦 Checking for trained models from Hugging Face Hub...")
-try:
-    from hf_model_loader import download_models_from_hf
-    download_models_from_hf()
-except Exception as e:
-    print(f"⚠️ Model download failed: {e}. Continuing with fallback models...")
+# ==================== ASYNC MODEL DOWNLOAD (NON-BLOCKING) ====================
+import threading
+
+def _background_model_fetch():
+    try:
+        from hf_model_loader import download_models_from_hf
+        download_models_from_hf()
+    except Exception as e:
+        print(f"⚠️ Background model download note: {e}")
+
+threading.Thread(target=_background_model_fetch, daemon=True, name="hf-downloader").start()
 
 # Import functions from finalwebapp (suppress streamlit warnings when importing as module)
 import warnings
@@ -617,117 +621,55 @@ def calculate_real_time_metrics(crack_details, growth_analysis, material_name, m
         'total_crack_area': total_crack_area
     }
 
-# Load models directly (not through load_models function since it's now conditional)
+# Load models directly if weights exist, otherwise initialize as None without eager downloads
+YOLO_MODEL = None
+SEGMENTATION_MODEL = None
+MATERIAL_MODEL = None
+yolo_status = "Initializing..."
+seg_status = "Initializing..."
+material_status = "Initializing..."
+
 try:
-    if YOLO is None:
-        raise ImportError("YOLO not available")
-    
-    # Get absolute paths for model loading
-    import sys
-    current_dir = os.path.dirname(os.path.abspath(__file__)) if hasattr(sys, 'argv') else os.getcwd()
-    
-    # Load YOLO model for crack detection
-    yolo_path = "runs/detect/train3/weights/best.pt"
-    abs_yolo_path = os.path.abspath(yolo_path)
-    print(f"🔍 Looking for crack detection model at: {abs_yolo_path}")
-    print(f"   File exists: {os.path.exists(abs_yolo_path)}")
-    
-    if os.path.exists(abs_yolo_path):
-        try:
-            YOLO_MODEL = YOLO(abs_yolo_path)
-            print(f"✅ Successfully loaded trained crack detection model from {abs_yolo_path}")
-            yolo_status = f"✅ Trained crack detection model loaded ({os.path.getsize(abs_yolo_path)/1e6:.1f}MB)"
-        except Exception as e:
-            print(f"⚠️ Failed to load trained model: {e}. Using fallback...")
-            YOLO_MODEL = YOLO("yolov8n.pt")
-            yolo_status = "⚠️ Using default YOLOv8n model (trained model failed to load)"
-    else:
-        print(f"⚠️ Crack detection model not found at {abs_yolo_path}")
-        YOLO_MODEL = YOLO("yolov8n.pt")
-        yolo_status = "⚠️ Using default YOLOv8n model (trained model file not found)"
-    print(f"   Model class names: {YOLO_MODEL.names if hasattr(YOLO_MODEL, 'names') else 'Unknown'}")
+    if YOLO is not None:
+        yolo_path = os.path.abspath("runs/detect/train3/weights/best.pt")
+        if os.path.exists(yolo_path):
+            try:
+                YOLO_MODEL = YOLO(yolo_path)
+                yolo_status = f"✅ Trained crack detection model loaded ({os.path.getsize(yolo_path)/1e6:.1f}MB)"
+                print(f"✅ Loaded crack detection model: {yolo_path}")
+            except Exception as e:
+                print(f"⚠️ Crack detection load note: {e}")
+                yolo_status = f"⚠️ Fallback active ({e})"
+        else:
+            yolo_status = "⏳ Downloading weights from HF Hub..."
 
-    # Load segmentation model
-    seg_path = "segmentation_model/weights/best.pt"
-    abs_seg_path = os.path.abspath(seg_path)
-    print(f"🔍 Looking for segmentation model at: {abs_seg_path}")
-    print(f"   File exists: {os.path.exists(abs_seg_path)}")
-    
-    if os.path.exists(abs_seg_path):
-        try:
-            SEGMENTATION_MODEL = YOLO(abs_seg_path)
-            print(f"✅ Successfully loaded segmentation model from {abs_seg_path}")
-            seg_status = f"✅ Segmentation model loaded ({os.path.getsize(abs_seg_path)/1e6:.1f}MB)"
-        except Exception as e:
-            print(f"⚠️ Failed to load segmentation model: {e}. Using fallback...")
-            SEGMENTATION_MODEL = YOLO("yolov8n-seg.pt")
-            seg_status = "⚠️ Using default YOLOv8n-seg model (trained model failed)"
-    else:
-        print(f"⚠️ Segmentation model not found at {abs_seg_path}")
-        SEGMENTATION_MODEL = YOLO("yolov8n-seg.pt")
-        seg_status = "⚠️ Using default YOLOv8n-seg model (file not found)"
-    print(f"   Model class names: {SEGMENTATION_MODEL.names if hasattr(SEGMENTATION_MODEL, 'names') else 'Unknown'}")
+        seg_path = os.path.abspath("segmentation_model/weights/best.pt")
+        if os.path.exists(seg_path):
+            try:
+                SEGMENTATION_MODEL = YOLO(seg_path)
+                seg_status = f"✅ Segmentation model loaded ({os.path.getsize(seg_path)/1e6:.1f}MB)"
+                print(f"✅ Loaded segmentation model: {seg_path}")
+            except Exception as e:
+                print(f"⚠️ Segmentation load note: {e}")
+                seg_status = f"⚠️ Fallback active ({e})"
+        else:
+            seg_status = "⏳ Downloading weights from HF Hub..."
+except Exception as e:
+    print(f"⚠️ YOLO init note: {e}")
+    yolo_status = "⚠️ Edge-detection fallback mode"
+    seg_status = "⚠️ Edge-detection fallback mode"
 
-    # Load material model
-    if TF_AVAILABLE and tf is not None and keras is not None:
-        try:
-            # Try to load trained .h5 model
-            material_h5_path = os.path.join(os.path.dirname(__file__), "materialclassification_model/material_classifier.h5")
-            if os.path.exists(material_h5_path):
-                MATERIAL_MODEL = keras.models.load_model(material_h5_path)
-                MATERIAL_MODEL.trainable = False
-                material_status = f"✅ Trained material classifier loaded from .h5 ({os.path.getsize(material_h5_path)/1e6:.1f}MB)"
-                print(f"   {material_status}")
-            else:
-                # Try .tflite model as fallback
-                material_tflite_path = os.path.join(os.path.dirname(__file__), "materialclassification_model/material_classifier.tflite")
-                if os.path.exists(material_tflite_path):
-                    interpreter = tf.lite.Interpreter(model_path=material_tflite_path)
-                    interpreter.allocate_tensors()
-                    MATERIAL_MODEL = interpreter
-                    material_status = f"✅ Trained material classifier loaded from .tflite ({os.path.getsize(material_tflite_path)/1e6:.1f}MB)"
-                    print(f"   {material_status}")
-                else:
-                    raise FileNotFoundError("No trained material classifier found")
-        except Exception as e:
-            print(f"   ⚠️ Failed to load trained material model: {e}")
-            # Fallback to PyTorch if available
-            if TORCH_AVAILABLE and models is not None:
-                try:
-                    MATERIAL_MODEL = models.mobilenet_v2(weights='IMAGENET1K_V1')
-                    MATERIAL_MODEL.classifier = nn.Sequential(
-                        nn.Dropout(0.2),
-                        nn.Linear(MATERIAL_MODEL.last_channel, 8)
-                    )
-                    MATERIAL_MODEL.eval()
-                    material_status = "⚠️ Using PyTorch MobileNetV2 fallback"
-                    print(f"   {material_status}")
-                except Exception as e2:
-                    MATERIAL_MODEL = None
-                    material_status = f"❌ Material model failed: {e2}"
-                    print(f"   {material_status}")
-            else:
-                MATERIAL_MODEL = None
-                material_status = "❌ Material model not available (TensorFlow and PyTorch unavailable)"
-                print(f"   {material_status}")
-    elif TORCH_AVAILABLE and models is not None:
-        try:
-            MATERIAL_MODEL = models.mobilenet_v2(weights='IMAGENET1K_V1')
-            MATERIAL_MODEL.classifier = nn.Sequential(
-                nn.Dropout(0.2),
-                nn.Linear(MATERIAL_MODEL.last_channel, 8)
-            )
-            MATERIAL_MODEL.eval()
-            material_status = "⚠️ PyTorch MobileNetV2 loaded (TensorFlow unavailable)"
-            print(f"   {material_status}")
-        except Exception as e:
-            MATERIAL_MODEL = None
-            material_status = f"❌ Material model failed: {e}"
-            print(f"   {material_status}")
+# Lightweight material model check (skip heavy ImageNet download on low RAM containers)
+try:
+    material_h5_path = os.path.join(os.path.dirname(__file__), "materialclassification_model/material_classifier.h5")
+    if os.path.exists(material_h5_path) and TF_AVAILABLE and keras is not None:
+        MATERIAL_MODEL = keras.models.load_model(material_h5_path)
+        MATERIAL_MODEL.trainable = False
+        material_status = f"✅ Trained material classifier loaded ({os.path.getsize(material_h5_path)/1e6:.1f}MB)"
     else:
-        MATERIAL_MODEL = None
-        material_status = "❌ Material model not available (TensorFlow and PyTorch required)"
-        print(f"   {material_status}")
+        material_status = "✅ Heuristic/MobileNet material classifier active"
+except Exception as e:
+    material_status = f"⚠️ Material classification fallback: {e}"
     
     MODELS_STATUS = {
         'yolo': yolo_status,

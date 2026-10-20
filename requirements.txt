@@ -13,7 +13,7 @@ httpx>=0.24.1
 python-dotenv==1.0.0
 
 # ==================== COMPUTER VISION ====================
-opencv-python>=4.9.0
+opencv-python-headless>=4.9.0
 Pillow>=10.0.0
 imageio>=2.32.0
 scikit-image>=0.21.0
@@ -21,11 +21,6 @@ imutils>=0.5.4
 
 # ==================== OBJECT DETECTION (YOLOv8) ====================
 ultralytics>=8.1.0
-torch>=2.9.0
-torchvision>=0.18.0
-
-# ==================== DEEP LEARNING (TENSORFLOW/KERAS) ====================
-tensorflow>=2.13.0
 
 # ==================== DATA SCIENCE & ANALYTICS ====================
 numpy>=1.24.0

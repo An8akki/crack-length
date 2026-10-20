@@ -17,10 +17,11 @@ RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY requirements.txt .
+# Install CPU-only PyTorch first (saves 2.5GB of CUDA packages and 350MB+ RAM on CPU servers)
+RUN pip install --no-cache-dir torch torchvision --index-url https://download.pytorch.org/whl/cpu
 
-# Install Python packages
+# Copy requirements and install remaining packages
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy app code and core packages

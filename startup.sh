@@ -1,27 +1,15 @@
 #!/bin/bash
-# Startup script for InfraVision AI on Hugging Face Spaces
+set -e
 
-set -e  # Exit on error
-
-echo "🚀 Starting InfraVision AI API Server..."
-echo "📍 Loading models and initializing system..."
-
-# Set working directory
+echo "🚀 Starting InfraVision AI Server..."
 cd /app
 
-# Download models from Hugging Face Hub before starting Flask
-echo ""
-echo "📥 Downloading trained models from Hugging Face..."
-python3 -c "
-from hf_model_loader import download_models_from_hf
-try:
-    download_models_from_hf()
-except Exception as e:
-    print(f'⚠️ Warning: Model download had issues: {e}')
-    print('   Will continue with available models or fallbacks')
-"
+# Ensure PORT is set (Render provides $PORT, default to 7860)
+export PORT=${PORT:-7860}
+export PYTHONUNBUFFERED=1
+export CUDA_VISIBLE_DEVICES="-1"
+export TF_ENABLE_ONEDNN_OPTS=0
+export TF_CPP_MIN_LOG_LEVEL=3
 
-# Run the Flask app on port 7860 (Hugging Face Spaces default)
-echo ""
-echo "🔧 Starting Flask API server..."
-python3 finalwebapp_api.py
+echo "📍 Binding to port: $PORT"
+exec python3 finalwebapp_api.py
