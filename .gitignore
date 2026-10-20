@@ -200,6 +200,8 @@ RGBD_Concrete_Crack_Dataset.zip
 # Allow research project audit files, manifests, baseline code, reports, and handover
 !SDNET2021_Audit/**
 !SDNET2021_Audit/**/*.csv
+!reports/**/*.csv
+!results/**/*.csv
 !SDNET2021_Audit/**/*.json
 !SDNET2021_Audit/**/*.png
 !SDNET2021_Audit/**/*.pt
