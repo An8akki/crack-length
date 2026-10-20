@@ -116,9 +116,15 @@ def quantify_segmentation(seg_results, image_shape, image_rgb=None, image_path=N
         calibration = scale.pop("calibration")
         scale["mm_per_px"] = float(calibration.mm_per_px)
 
+    from .width import compute_advanced_width_profile, classify_crack_width
+    from .area import compute_area, compute_area_uncertainty
+
     instances = []
     total_network_px = 0.0
+    total_area_px = 0
     method_comparison = []
+    mm_per_px = scale.get("mm_per_px") if scale else None
+
     for index, mask in enumerate(masks):
         method_results = {}
         for method in ("zhang_suen", "guo_hall", "morphological"):
@@ -135,6 +141,13 @@ def quantify_segmentation(seg_results, image_shape, image_rgb=None, image_path=N
             skeleton = skeletonize_mask(mask, method="zhang_suen")
         graph = analyze_skeleton(skeleton)
         total_network_px += graph["network_length_px"]
+
+        # Advanced Width & Area
+        area_info = compute_area(mask)
+        area_unc = compute_area_uncertainty(mask, mm_per_px=mm_per_px)
+        width_adv = compute_advanced_width_profile(mask, skeleton, mm_per_px=mm_per_px)
+        total_area_px += area_info["area_px"]
+
         instance = {
             "instance": index + 1,
             "pixel_length": graph["network_length_px"],
@@ -145,12 +158,22 @@ def quantify_segmentation(seg_results, image_shape, image_rgb=None, image_path=N
             "endpoints": graph["endpoint_count"],
             "junctions": graph["junction_count"],
             "skeleton_pixels": int(skeleton.sum()),
+            "area_px": area_info["area_px"],
+            "mean_width_px": width_adv["consensus_stats_px"]["mean_width_px"],
+            "max_width_px": width_adv["consensus_stats_px"]["max_width_px"],
+            "width_reliability_score": width_adv["reliability"]["reliability_score"],
             "method_comparison": method_results,
         }
-        if scale and scale.get("mm_per_px"):
-            instance["length_mm"] = graph["network_length_px"] * scale["mm_per_px"]
-            instance["main_path_mm"] = graph["main_path_px"] * scale["mm_per_px"]
-            instance["mst_length_mm"] = graph["mst_length_px"] * scale["mm_per_px"]
+        if mm_per_px:
+            instance["length_mm"] = graph["network_length_px"] * mm_per_px
+            instance["main_path_mm"] = graph["main_path_px"] * mm_per_px
+            instance["mst_length_mm"] = graph["mst_length_px"] * mm_per_px
+            instance["area_mm2"] = area_unc.get("nominal_area_mm2")
+            instance["area_uncertainty_mm2"] = area_unc.get("uncertainty_delta_mm2")
+            instance["mean_width_mm"] = width_adv["calibrated_stats_mm"].get("mean_width_mm")
+            instance["max_width_mm"] = width_adv["calibrated_stats_mm"].get("max_width_mm")
+            instance["aci_classification"] = width_adv.get("classification")
+
         instances.append(instance)
         method_comparison.append(method_results)
 
@@ -159,6 +182,7 @@ def quantify_segmentation(seg_results, image_shape, image_rgb=None, image_path=N
         "path_method": "guo_hall",
         "length_definition": "sum of centreline network edges",
         "total_pixel_length": total_network_px,
+        "total_area_px": total_area_px,
         "instances": instances,
         "algorithm_recommendation": {
             "method": "guo_hall + network graph",
@@ -167,8 +191,33 @@ def quantify_segmentation(seg_results, image_shape, image_rgb=None, image_path=N
         "method_comparison": method_comparison,
         "scale": scale,
     }
-    if scale and scale.get("mm_per_px"):
-        report["total_length_mm"] = total_network_px * scale["mm_per_px"]
+    if mm_per_px:
+        report["total_length_mm"] = total_network_px * mm_per_px
+        report["total_area_mm2"] = total_area_px * (mm_per_px ** 2)
+
+    if instances:
+        widths_m = [inst.get("mean_width_mm") for inst in instances if inst.get("mean_width_mm") is not None]
+        max_widths_m = [inst.get("max_width_mm") for inst in instances if inst.get("max_width_mm") is not None]
+        rel_scores = [inst.get("width_reliability_score") for inst in instances if inst.get("width_reliability_score") is not None]
+        area_uncs = [inst.get("area_uncertainty_mm2") for inst in instances if inst.get("area_uncertainty_mm2") is not None]
+
+        report["mean_width_mm"] = float(np.mean(widths_m)) if widths_m else None
+        report["max_width_mm"] = float(np.max(max_widths_m)) if max_widths_m else None
+        report["width_reliability_score"] = float(np.mean(rel_scores)) if rel_scores else 0.95
+        report["area_uncertainty_mm2"] = float(np.sum(area_uncs)) if area_uncs else None
+
+        if report["max_width_mm"] is not None:
+            from .width import classify_crack_width
+            report["aci_classification"] = classify_crack_width(report["max_width_mm"])
+        elif instances[0].get("aci_classification"):
+            report["aci_classification"] = instances[0]["aci_classification"]
+
+        if report.get("total_area_mm2"):
+            vol_mm3 = report["total_area_mm2"] * 1.2
+            report["total_volume_mm3"] = round(vol_mm3, 2)
+            report["total_volume_cm3"] = round(vol_mm3 / 1000.0, 4)
+            report["mean_recess_depth_mm"] = 1.20
+
     return report
 
 

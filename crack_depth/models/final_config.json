@@ -1,0 +1,122 @@
+{
+  "project_name": "Pinnacle Concrete Crack Relative Recess Estimation",
+  "phase": "5.14 \u2014 Final Model Freeze & Software Inference Packaging",
+  "scope": "PERMANENT SOFTWARE-ONLY",
+  "model_architecture": {
+    "family": "ExtraTreesRegressor",
+    "n_estimators": 100,
+    "max_depth": 8,
+    "min_samples_leaf": 2,
+    "max_features": "sqrt",
+    "random_state": 42,
+    "n_jobs": -1
+  },
+  "features": {
+    "count": 25,
+    "feature_list": [
+      "hydraulic_radius_proxy",
+      "median_width_px",
+      "orientation_deg",
+      "log_median_width",
+      "mean_width_px",
+      "aperture_roughness_ratio",
+      "max_width_px",
+      "crack_area_px",
+      "compactness",
+      "p75_width_px",
+      "p25_width_px",
+      "plane_inlier_ratio",
+      "tortuosity",
+      "bbox_width_px",
+      "aspect_width_ratio",
+      "mean_luminance_contrast",
+      "local_surface_median",
+      "rgb_ring_mean_intensity",
+      "contrast_roughness_product",
+      "branch_points",
+      "rgb_edge_gradient",
+      "rgb_contrast_ratio",
+      "skeleton_length_px",
+      "branch_density_per_1kpx",
+      "main_component_ratio"
+    ],
+    "selection_strategy": "Permutation Importance Stability Selection (Phase 5.13 Top-25)"
+  },
+  "target": {
+    "name": "relative_recess_median",
+    "unit": "dimensionless_sensor_depth_units",
+    "physical_millimeter_depth_available": false,
+    "target_derived_leakage": "STRICTLY_PROHIBITED"
+  },
+  "calibration_state": {
+    "state": "UNCALIBRATED",
+    "predict_depth_mm_behavior": "RAISES NotCalibratedError",
+    "hardware_required": false
+  },
+  "conformal_uncertainty": {
+    "method": "Split Conformal Residual Interval",
+    "calibration_population": 508,
+    "intervals": {
+      "80_percent": {
+        "nominal_coverage_pct": 80.0,
+        "empirical_coverage_pct": 79.92,
+        "half_width_units": 12.978
+      },
+      "90_percent": {
+        "nominal_coverage_pct": 90.0,
+        "empirical_coverage_pct": 89.96,
+        "half_width_units": 22.35
+      },
+      "95_percent": {
+        "nominal_coverage_pct": 95.0,
+        "empirical_coverage_pct": 94.88,
+        "half_width_units": 32.665
+      }
+    }
+  },
+  "reliability_thresholds": {
+    "HIGH": {
+      "min_median_width_px": 20.0,
+      "min_valid_depth_ratio": 0.95,
+      "max_surface_noise_sigma": 2.3,
+      "min_plane_inlier_ratio": 0.85
+    },
+    "RELIABLE": {
+      "min_median_width_px": 15.0,
+      "min_valid_depth_ratio": 0.9,
+      "min_plane_inlier_ratio": 0.7
+    },
+    "BORDERLINE": {
+      "min_median_width_px": 10.0,
+      "min_valid_depth_ratio": 0.8
+    },
+    "UNRELIABLE": {
+      "description": "Hairline cracks (<10 px) or valid depth ratio 10%-80%"
+    },
+    "INVALID": {
+      "description": "Zero crack pixels, valid depth < 10%, or failed surface plane fit"
+    }
+  },
+  "authoritative_cross_validation_metrics": {
+    "n_samples": 508,
+    "cv_strategy": "5-Fold Grouped by Capture Stem",
+    "r2_mean": 0.428,
+    "r2_std": 0.09,
+    "mae_mean": 9.161,
+    "mae_std": 1.368,
+    "rmse_mean": 14.278,
+    "medae_mean": 5.544
+  },
+  "final_fit_training_metrics": {
+    "n_samples": 508,
+    "train_r2": 0.7555,
+    "train_mae": 6.2527,
+    "note": "Training performance only. Never substitute for cross-validated generalization accuracy."
+  },
+  "artifacts": {
+    "model_file": "src/inference/models/final_extra_trees.joblib",
+    "scaler_file": "src/inference/models/final_scaler.joblib",
+    "model_sha256": "b30d65f8aa2276c52569d933efe7da022fcc6830907e75cb2707a496b8ac1934",
+    "scaler_sha256": "9ed03bb1a36f8a9752e0b7eaf33c5d8c62087a08510fce5b267e5c27b363040d"
+  }
+}

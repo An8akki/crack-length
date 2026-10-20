@@ -7,7 +7,7 @@
     "components": 1,
     "junctions": 4,
     "network_minus_main_px": 32.41421356237309,
-    "processing_time_ms": 21.388799999840558,
+    "processing_time_ms": 24.863099999492988,
     "true_length_px": 100.0,
     "absolute_error_px": 1.8284271247461845,
     "percentage_error": 1.8284271247461845
@@ -20,7 +20,7 @@
     "components": 1,
     "junctions": 4,
     "network_minus_main_px": 32.41421356237309,
-    "processing_time_ms": 21.388799999840558,
+    "processing_time_ms": 24.863099999492988,
     "true_length_px": 100.0,
     "absolute_error_px": 30.585786437626908,
     "percentage_error": -30.585786437626908
@@ -33,7 +33,7 @@
     "components": 1,
     "junctions": 4,
     "network_minus_main_px": 32.41421356237309,
-    "processing_time_ms": 21.388799999840558,
+    "processing_time_ms": 24.863099999492988,
     "true_length_px": 100.0,
     "absolute_error_px": 1.0,
     "percentage_error": -1.0
@@ -46,7 +46,7 @@
     "components": 1,
     "junctions": 4,
     "network_minus_main_px": 33.8284271247462,
-    "processing_time_ms": 17.12200000474695,
+    "processing_time_ms": 23.007499999948777,
     "true_length_px": 100.0,
     "absolute_error_px": 2.6568542494923832,
     "percentage_error": 2.6568542494923832
@@ -59,7 +59,7 @@
     "components": 1,
     "junctions": 4,
     "network_minus_main_px": 33.8284271247462,
-    "processing_time_ms": 17.12200000474695,
+    "processing_time_ms": 23.007499999948777,
     "true_length_px": 100.0,
     "absolute_error_px": 31.171572875253815,
     "percentage_error": -31.171572875253815
@@ -72,7 +72,7 @@
     "components": 1,
     "junctions": 4,
     "network_minus_main_px": 33.8284271247462,
-    "processing_time_ms": 17.12200000474695,
+    "processing_time_ms": 23.007499999948777,
     "true_length_px": 100.0,
     "absolute_error_px": 0.17157287525381548,
     "percentage_error": -0.17157287525381548
@@ -85,7 +85,7 @@
     "components": 1,
     "junctions": 4,
     "network_minus_main_px": 33.41421356237311,
-    "processing_time_ms": 17.79569999780506,
+    "processing_time_ms": 15.280799998436123,
     "true_length_px": 100.0,
     "absolute_error_px": 5.656854249492383,
     "percentage_error": 5.656854249492382
@@ -98,7 +98,7 @@
     "components": 1,
     "junctions": 4,
     "network_minus_main_px": 33.41421356237311,
-    "processing_time_ms": 17.79569999780506,
+    "processing_time_ms": 15.280799998436123,
     "true_length_px": 100.0,
     "absolute_error_px": 27.757359312880723,
     "percentage_error": -27.757359312880723
@@ -111,7 +111,7 @@
     "components": 1,
     "junctions": 4,
     "network_minus_main_px": 33.41421356237311,
-    "processing_time_ms": 17.79569999780506,
+    "processing_time_ms": 15.280799998436123,
     "true_length_px": 100.0,
     "absolute_error_px": 2.8284271247461845,
     "percentage_error": 2.8284271247461845

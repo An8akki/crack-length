@@ -175,6 +175,9 @@ logs/
 server_output.log
 synthetic_specimens/
 outputs/
+scratch/
+restoration_data/
+restoration_results/
 
 # Database Files
 *.db

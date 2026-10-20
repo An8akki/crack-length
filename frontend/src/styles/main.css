@@ -703,38 +703,43 @@ h1, h2, h3, h4, h5, h6 {
 .hero-visual {
   position: relative;
   flex: 1;
-  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 380px;
 }
 
 .floating-elements {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0;
-  right: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  align-items: flex-end;
   z-index: 5;
+  width: 100%;
+  max-width: 360px;
 }
 
 .floating-card {
-  position: absolute;
+  position: relative;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: 2.5rem 2rem;
-  background: var(--glass-gradient);
-  backdrop-filter: blur(20px);
-  border: var(--border-glass);
-  border-radius: var(--border-radius-xl);
-  box-shadow: var(--shadow-glass);
-  transition: all 0.3s ease;
+  gap: 1.1rem;
+  padding: 1.1rem 1.4rem;
+  background: rgba(15, 23, 42, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #ffffff !important;
   font-weight: 600;
-  text-align: center;
-  min-width: 180px;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  font-size: 1rem;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
 }
 
 .floating-card::before {
@@ -744,8 +749,10 @@ h1, h2, h3, h4, h5, h6 {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(37, 99, 235, 0.1), transparent);
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.12), transparent);
   transition: left 0.6s ease;
+  border-radius: 16px;
+  pointer-events: none;
 }
 
 .floating-card:hover::before {
@@ -753,70 +760,69 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .floating-card:hover {
-  transform: scale(1.05) translateY(-4px);
-  box-shadow: var(--shadow-glow);
+  transform: translateX(-8px) scale(1.02);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+  border-color: rgba(255, 255, 255, 0.28);
 }
 
-.floating-card svg {
-  color: var(--primary-light);
-  margin-bottom: 0.25rem;
-  width: 28px;
-  height: 28px;
+.floating-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.floating-card span {
-  font-size: 0.8rem;
-  line-height: 1.2;
+.floating-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
-@media (max-width: 768px) {
-  .floating-elements {
-    height: auto !important;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    animation: none !important;
-  }
+.floating-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+}
 
-  .card-1, .card-2, .card-3, .card-4 {
-    position: static !important;
-    top: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    left: auto !important;
-    animation: none !important;
-    margin: 0;
-    width: 100%;
-  }
+.floating-card-desc {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
 .card-1 {
-  top: 55%; /* Pulled down */
-  right: 5%;
-  transform: translateY(-130%) scale(0.9); /* Reduced size */
+  border-left: 4px solid #38bdf8;
+  animation: float-subtle-1 6s ease-in-out infinite;
 }
 
 .card-2 {
-  top: 55%; /* Pulled down */
-  right: 18%; /* Pulled closer to text */
-  transform: translateY(-50%) scale(0.9); /* Reduced size */
+  border-left: 4px solid #f59e0b;
+  animation: float-subtle-2 6s ease-in-out infinite 1s;
 }
 
 .card-3 {
-  top: 55%; /* Pulled down */
-  right: 5%;
-  transform: translateY(30%) scale(0.9); /* Reduced size */
+  border-left: 4px solid #06b6d4;
+  animation: float-subtle-3 6s ease-in-out infinite 2s;
 }
 
-/* Base floating elements common styles */
-.card-1, .card-2, .card-3 {
-  position: absolute;
-  animation: float-base 8s ease-in-out infinite;
+@keyframes float-subtle-1 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
 }
 
-@keyframes float-base {
-  0%, 100% { margin-top: 0px; }
-  50% { margin-top: -20px; }
+@keyframes float-subtle-2 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes float-subtle-3 {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
 }
 
 @media (max-width: 768px) {

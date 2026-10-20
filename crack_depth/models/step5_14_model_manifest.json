@@ -1,0 +1,30 @@
+{
+  "manifest_version": "1.0",
+  "phase": "5.14",
+  "stage_decision": "SOFTWARE PROTOTYPE COMPLETE \u2014 PERFORMANCE LIMITED",
+  "authoritative_cv_performance": {
+    "r2": 0.428,
+    "r2_uncertainty": 0.09,
+    "mae_units": 9.161,
+    "mae_uncertainty": 1.368,
+    "rmse_units": 14.278,
+    "medae_units": 5.544
+  },
+  "ceiling_findings": {
+    "target_0_70_achieved": false,
+    "explanation": "Empirical information ceiling of 8-bit passive stereo depth bounds generalization to R^2 \u2248 0.42-0.43 due to optical shadow occlusion and 28.9% negative recess frequency.",
+    "unseen_grouped_cv_preserved": true,
+    "target_leakage_status": "ZERO_LEAKAGE_VERIFIED"
+  },
+  "software_environment": {
+    "python_version": "3.12.10",
+    "scikit_learn": "1.7.2",
+    "joblib": "1.5.2",
+    "numpy": "2.2.6",
+    "pandas": "2.3.2"
+  },
+  "model_checksums": {
+    "final_extra_trees.joblib": "b30d65f8aa2276c52569d933efe7da022fcc6830907e75cb2707a496b8ac1934",
+    "final_scaler.joblib": "9ed03bb1a36f8a9752e0b7eaf33c5d8c62087a08510fce5b267e5c27b363040d"
+  }
+}
