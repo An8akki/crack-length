@@ -23,9 +23,11 @@ import numpy as np
 import pandas as pd
 import torch
 
-# Base directories
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-AUDIT_ROOT = r"C:\Users\Dell\Documents\SDNET2021_Audit"
+DEFAULT_AUDIT_ROOT = r"C:\Users\Dell\Documents\SDNET2021_Audit"
+if not os.path.exists(DEFAULT_AUDIT_ROOT):
+    DEFAULT_AUDIT_ROOT = os.path.dirname(SCRIPT_DIR)
+AUDIT_ROOT = DEFAULT_AUDIT_ROOT
 PIPELINE_DIR = os.path.join(AUDIT_ROOT, "phase2b1_dataset_pipeline")
 BASELINE_DIR = os.path.join(AUDIT_ROOT, "phase2b2_source_only_baseline")
 SRC_DIR = os.path.join(AUDIT_ROOT, "extracted_irt")
@@ -309,7 +311,8 @@ def run_resume(baseline_dir, data_dir, src_dir, max_epochs=100, patience=12, bat
             patience=patience,
             batch_size=batch_size,
             lr=lr,
-            weight_decay=weight_decay
+            weight_decay=weight_decay,
+            features=[8, 16, 32, 64]
         )
 
         # Append to checkpoint manifest atomically

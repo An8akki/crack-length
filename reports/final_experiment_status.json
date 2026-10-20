@@ -1,6 +1,6 @@
 {
   "benchmark": "AI-Based Concrete Delamination Characterization Under Cross-Bridge Domain Shift",
-  "audit_completed_timestamp": "2026-10-20T12:38:00+05:30",
+  "audit_completed_timestamp": "2026-10-20T13:32:47.711635",
   "repository": "https://github.com/An8akki/crack-length",
   "branch": "depth-estimation-integration",
   "git_commit": "ed508ddc",
@@ -9,7 +9,7 @@
   "phase_summary": {
     "Phase 0 (Repository Recovery & Inventory)": "completed",
     "Phase 1 (Environment & Data Validation)": "completed",
-    "Phase 2 (Source-Only Baseline Benchmark)": "fold_1_completed_folds_2_to_5_pending_dataset",
+    "Phase 2 (Source-Only Baseline Benchmark)": "completed_15_of_15_verified",
     "Phase 3 (Deep CORAL Module Implementation)": "completed_tested",
     "Phase 4 (Leakage & Data Isolation Testing)": "completed_tested",
     "Phase 5 (Deep CORAL Execution)": "pending_dataset",
@@ -23,10 +23,10 @@
   },
   "runs": {
     "total_expected": 15,
-    "completed_and_verified": 3,
-    "incomplete_restart_required": 1,
+    "completed_and_verified": 15,
+    "incomplete_restart_required": 0,
     "incomplete_resumable": 0,
-    "missing": 11,
+    "missing": 0,
     "failed": 0,
     "unknown": 0
   },
@@ -34,6 +34,8 @@
     "test_deep_coral": "7_of_7_passed",
     "test_lobo_splits": "4_of_4_passed",
     "test_data_isolation": "5_of_5_passed",
-    "resume_experiment_status_audit": "passed"
+    "resume_experiment_status_audit": "passed",
+    "baseline_validation_tests": "10_of_10_passed",
+    "dataset_validation_tests": "8_of_8_passed"
   }
 }

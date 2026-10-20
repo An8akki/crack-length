@@ -22,8 +22,11 @@ from torch.utils.data import Dataset, DataLoader
 # Import local U-Net model
 from unet_model import UNet
 
-DATA_DIR = r"C:\Users\Dell\Documents\SDNET2021_Audit\phase2b1_dataset_pipeline"
-BASE_OUT_DIR = r"C:\Users\Dell\Documents\SDNET2021_Audit\phase2b2_source_only_baseline"
+DEFAULT_AUDIT_ROOT = r"C:\Users\Dell\Documents\SDNET2021_Audit"
+if not os.path.exists(DEFAULT_AUDIT_ROOT):
+    DEFAULT_AUDIT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DATA_DIR = os.path.join(DEFAULT_AUDIT_ROOT, "phase2b1_dataset_pipeline")
+BASE_OUT_DIR = os.path.join(DEFAULT_AUDIT_ROOT, "phase2b2_source_only_baseline")
 
 
 def set_seed(seed):
@@ -177,7 +180,7 @@ def train_single_run(
     batch_size=8,
     lr=1e-3,
     weight_decay=1e-4,
-    features=[16, 32, 64, 128]
+    features=[8, 16, 32, 64]
 ):
     """
     Executes a single source-only baseline training run with early stopping.

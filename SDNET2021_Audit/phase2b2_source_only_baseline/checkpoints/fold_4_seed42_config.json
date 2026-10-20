@@ -1,0 +1,59 @@
+{
+  "run_id": "fold_4_seed42",
+  "fold_id": "fold_4",
+  "seed": 42,
+  "target_bridge": "B4",
+  "val_bridge": "B5",
+  "train_bridges": [
+    "B1",
+    "B2",
+    "B3"
+  ],
+  "best_epoch": 1,
+  "total_epochs": 13,
+  "best_val_macro_delam_f1": 0.10609647865348583,
+  "best_val_metrics": {
+    "class0_precision": 0.7688776155920988,
+    "class0_recall": 0.8683733795212132,
+    "class0_f1": 0.8156023181329192,
+    "class0_iou": 0.6886220149022972,
+    "class0_gt_pixels": 4526440,
+    "class1_precision": 0.2519695945120212,
+    "class1_recall": 0.1822357804675406,
+    "class1_f1": 0.21150302762672754,
+    "class1_iou": 0.11825741440650607,
+    "class1_gt_pixels": 1187961,
+    "class2_precision": 0.026647144948755492,
+    "class2_recall": 0.00034948920808049774,
+    "class2_f1": 0.0006899296802441289,
+    "class2_iou": 0.00034508388192822255,
+    "class2_gt_pixels": 260380,
+    "val_macro_delam_f1": 0.10609647865348583,
+    "val_macro_delam_iou": 0.059301249144217145,
+    "comb_delam_precision": 0.30929907419644287,
+    "comb_delam_recall": 0.1842121434109785,
+    "comb_delam_f1": 0.23090314213721413,
+    "comb_delam_iou": 0.13052035060203773
+  },
+  "normalization": {
+    "mean": 0.6016505360603333,
+    "std": 0.18097995221614838
+  },
+  "features": [
+    8,
+    16,
+    32,
+    64
+  ],
+  "hyperparameters": {
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 8,
+    "max_epochs": 100,
+    "patience": 12
+  },
+  "checkpoint_file": "fold_4_seed42_best_checkpoint.pt",
+  "checkpoint_sha256": "77a48ebb026fea0081f14f67108fbba21bfeb47e943d838c45227ca255ff441e",
+  "frozen": true,
+  "training_duration_sec": 129.63
+}

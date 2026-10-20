@@ -20,9 +20,12 @@ import torch
 
 from unet_model import UNet
 
-SRC_DIR = r"C:\Users\Dell\Documents\SDNET2021_Audit\extracted_irt"
-DATA_DIR = r"C:\Users\Dell\Documents\SDNET2021_Audit\phase2b1_dataset_pipeline"
-BASE_OUT_DIR = r"C:\Users\Dell\Documents\SDNET2021_Audit\phase2b2_source_only_baseline"
+DEFAULT_AUDIT_ROOT = r"C:\Users\Dell\Documents\SDNET2021_Audit"
+if not os.path.exists(DEFAULT_AUDIT_ROOT):
+    DEFAULT_AUDIT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC_DIR = os.path.join(DEFAULT_AUDIT_ROOT, "extracted_irt")
+DATA_DIR = os.path.join(DEFAULT_AUDIT_ROOT, "phase2b1_dataset_pipeline")
+BASE_OUT_DIR = os.path.join(DEFAULT_AUDIT_ROOT, "phase2b2_source_only_baseline")
 
 BRIDGE_SOURCE_MAP = {
     "B1": {"folder": "1.Forest River NB", "orig": "FR_NB_Original.png", "annot": "FR_NB_Annotated.png"},
@@ -98,7 +101,7 @@ def evaluate_frozen_target(
     
     # 2. Load Model and Frozen Weights
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    features = config.get("features", [16, 32, 64, 128])
+    features = config.get("features", [8, 16, 32, 64])
     model = UNet(in_channels=1, num_classes=3, features=features).to(device)
     
     checkpoint_payload = torch.load(ckpt_path, map_location=device)

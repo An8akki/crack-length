@@ -210,4 +210,11 @@ RGBD_Concrete_Crack_Dataset.zip
 SDNET2021_Audit/**/__pycache__/
 SDNET2021_Audit/**/*.pyc
 
+# Exclude intermediate materialized patches and raw IR folder per git_handover.md
+SDNET2021_Audit/extracted_irt/
+SDNET2021_Audit/phase2b1_dataset_pipeline/patches/
+SDNET2021_Audit/phase2b1_dataset_pipeline/source_train/
+SDNET2021_Audit/phase2b1_dataset_pipeline/source_val/
+SDNET2021_Audit/phase2b1_dataset_pipeline/target_uda/
+
 

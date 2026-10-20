@@ -44,16 +44,24 @@ Therefore:
 
 ---
 
-## 3. Empirical Baseline Findings on Bridge 1 (Target B1)
+## 3. Empirical Baseline Findings Across All 5 Bridges (N=5 Domains)
 
-| Metric | Seed 42 | Seed 123 | Seed 999 | Bridge 1 Mean $\pm$ SD |
-| :--- | :---: | :---: | :---: | :---: |
-| **Macro Delam F1** | 2.84% | 11.14% | 14.45% | **$9.48 \pm 5.99\%$** |
-| **Class 2 Delam F1 (Above Rebar)** | 5.67% | 22.28% | 28.91% | **$18.95 \pm 11.97\%$** |
-| **Class 3 Delam F1 (Below Rebar)** | 0.00% | 0.00% | 0.00% | **$0.00 \pm 0.00\%$** |
-| **Defect Recall** | 11.35% | 34.75% | 53.20% | **$33.10 \pm 20.97\%$** |
-| **Sound Concrete F1** | 86.53% | 83.18% | 72.80% | **$80.84 \pm 7.16\%$** |
+| Target Bridge Domain | Seed 42 | Seed 123 | Seed 999 | Domain Mean $\pm$ SD | Defect Recall | Sound F1 |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Bridge 1 (Forest River NB)** | 2.84% | 11.14% | 14.45% | **$9.48 \pm 5.98\%$** | $33.10 \pm 20.97\%$ | $80.84 \pm 7.16\%$ |
+| **Bridge 2 (Forest River SB)** | 6.66% | 17.00% | 18.35% | **$14.00 \pm 6.40\%$** | $76.77 \pm 40.24\%$ | $57.00 \pm 20.26\%$ |
+| **Bridge 3 (Park River Median)** | 9.10% | 0.00% | 19.24% | **$9.45 \pm 9.62\%$** | $48.94 \pm 43.97\%$ | $80.18 \pm 7.87\%$ |
+| **Bridge 4 (Park River NB)** | 12.44% | 12.88% | 16.93% | **$14.08 \pm 2.48\%$** | $57.52 \pm 35.14\%$ | $61.15 \pm 39.88\%$ |
+| **Bridge 5 (Park River SB)** | 12.97% | 14.62% | 14.84% | **$14.14 \pm 1.02\%$** | $65.86 \pm 20.07\%$ | $68.63 \pm 10.44\%$ |
+| **Fleet Macro Average (15 Runs)** | — | — | — | **$12.23 \pm 5.54\%$** | **$56.44 \pm 32.26\%$** | **$69.56 \pm 20.45\%$** |
 
-### Key Observations:
-- **Zero Detection of Class 3:** In 100% of baseline runs on Bridge 1, Class 3 delaminations yielded zero true positive pixels.
-- **Stochastic Variance:** Seed variation accounts for a $11.61\%$ spread in Macro Delam F1 (from 2.84% to 14.45%), demonstrating that single-seed reporting is invalid for domain adaptation benchmarks on this dataset.
+### Key Observations Across the 5-Bridge Fleet:
+1. **Severe Sub-Rebar (Class 3) Delamination Collapse:**
+   - Fleet-wide Class 3 F1 averaged only **$0.45 \pm 1.72\%$**.
+   - In 11 out of 15 runs, Class 3 F1 was exactly **0.00%** (zero true positive detections).
+2. **Above-Rebar (Class 2) Delamination Sensitivity:**
+   - Fleet-wide Class 2 F1 averaged **$24.02 \pm 11.16\%$**, indicating models capture superficial near-surface delaminations with modest capability but struggle with generalization across differing solar/structural conditions.
+3. **Stochastic Optimization Sensitivity:**
+   - Seed variation accounts for up to a $19.24\%$ performance spread on the same bridge (e.g., Bridge 3 from 0.00% in seed 123 to 19.24% in seed 999), proving that multi-seed reporting is mathematically mandatory for cross-bridge domain adaptation evaluation.
+4. **Baseline Benchmark Ceiling:**
+   - The established baseline benchmark target is **$12.23\%$ Macro Delamination F1**. Unsupervised Domain Adaptation (Deep CORAL) must target $\Delta \ge +5.0\%$ Macro F1 to achieve practical significance.

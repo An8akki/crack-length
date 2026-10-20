@@ -23,8 +23,11 @@ from PIL import Image
 import pandas as pd
 import torch
 
-SRC_DIR = r"C:\Users\Dell\Documents\SDNET2021_Audit\extracted_irt"
-PIPELINE_DIR = r"C:\Users\Dell\Documents\SDNET2021_Audit\phase2b1_dataset_pipeline"
+DEFAULT_AUDIT_ROOT = r"C:\Users\Dell\Documents\SDNET2021_Audit"
+if not os.path.exists(DEFAULT_AUDIT_ROOT):
+    DEFAULT_AUDIT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SRC_DIR = os.path.join(DEFAULT_AUDIT_ROOT, "extracted_irt")
+PIPELINE_DIR = os.path.join(DEFAULT_AUDIT_ROOT, "phase2b1_dataset_pipeline")
 
 # Add pipeline directory to sys.path to import dataset_build modules
 if PIPELINE_DIR not in sys.path:
