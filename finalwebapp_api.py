@@ -17,10 +17,10 @@ except (AttributeError, ImportError) as e:
     print(f"⚠️ OpenCV (cv2) not available: {e}. Using Pillow + NumPy for image processing.")
     cv2 = None
 
-# Try to import YOLO, but handle cv2 dependency failure
+# Try to import YOLO, but handle cv2 dependency failure or DLL errors
 try:
     from ultralytics import YOLO
-except (AttributeError, ImportError) as e:
+except Exception as e:
     print(f"⚠️ YOLO not available: {e}. Continuing without YOLO...")
     YOLO = None
 try:
@@ -30,9 +30,9 @@ try:
     import torchvision.transforms as transforms
     TORCH_AVAILABLE = True
     print("✅ PyTorch/TorchVision loaded successfully")
-except ImportError as e:
+except Exception as e:
     TORCH_AVAILABLE = False
-    print(f"⚠️ PyTorch/TorchVision not available. Material classification will be limited. Error: {e}")
+    print(f"⚠️ PyTorch/TorchVision not available: {e}")
     torch = None
     nn = None
     models = None
@@ -183,6 +183,8 @@ import threading
 
 def _background_model_fetch():
     try:
+        # Allow the server to bind $PORT and pass Render health check first
+        time.sleep(5)
         from hf_model_loader import download_models_from_hf
         download_models_from_hf()
     except Exception as e:
@@ -621,70 +623,58 @@ def calculate_real_time_metrics(crack_details, growth_analysis, material_name, m
         'total_crack_area': total_crack_area
     }
 
-# Load models directly if weights exist, otherwise initialize as None without eager downloads
+# Models are deferred to prevent OOM crash (512MB RAM cap)
 YOLO_MODEL = None
 SEGMENTATION_MODEL = None
 MATERIAL_MODEL = None
-yolo_status = "Initializing..."
-seg_status = "Initializing..."
-material_status = "Initializing..."
 
-try:
-    if YOLO is not None:
+def get_api_yolo_model():
+    """Lazily load YOLO crack detection model if weights are available on disk"""
+    global YOLO_MODEL
+    if YOLO_MODEL is None and YOLO is not None:
         yolo_path = os.path.abspath("runs/detect/train3/weights/best.pt")
         if os.path.exists(yolo_path):
             try:
                 YOLO_MODEL = YOLO(yolo_path)
-                yolo_status = f"✅ Trained crack detection model loaded ({os.path.getsize(yolo_path)/1e6:.1f}MB)"
-                print(f"✅ Loaded crack detection model: {yolo_path}")
+                print(f"✅ Lazy-loaded YOLO crack detection model: {yolo_path}")
             except Exception as e:
-                print(f"⚠️ Crack detection load note: {e}")
-                yolo_status = f"⚠️ Fallback active ({e})"
-        else:
-            yolo_status = "⏳ Downloading weights from HF Hub..."
+                print(f"⚠️ YOLO lazy-load note: {e}")
+    return YOLO_MODEL
 
+def get_api_segmentation_model():
+    """Lazily load segmentation model if weights are available on disk"""
+    global SEGMENTATION_MODEL
+    if SEGMENTATION_MODEL is None and YOLO is not None:
         seg_path = os.path.abspath("segmentation_model/weights/best.pt")
         if os.path.exists(seg_path):
             try:
                 SEGMENTATION_MODEL = YOLO(seg_path)
-                seg_status = f"✅ Segmentation model loaded ({os.path.getsize(seg_path)/1e6:.1f}MB)"
-                print(f"✅ Loaded segmentation model: {seg_path}")
+                print(f"✅ Lazy-loaded segmentation model: {seg_path}")
             except Exception as e:
-                print(f"⚠️ Segmentation load note: {e}")
-                seg_status = f"⚠️ Fallback active ({e})"
-        else:
-            seg_status = "⏳ Downloading weights from HF Hub..."
-except Exception as e:
-    print(f"⚠️ YOLO init note: {e}")
-    yolo_status = "⚠️ Edge-detection fallback mode"
-    seg_status = "⚠️ Edge-detection fallback mode"
+                print(f"⚠️ Segmentation lazy-load note: {e}")
+    return SEGMENTATION_MODEL
 
-# Lightweight material model check (skip heavy ImageNet download on low RAM containers)
-try:
-    material_h5_path = os.path.join(os.path.dirname(__file__), "materialclassification_model/material_classifier.h5")
-    if os.path.exists(material_h5_path) and TF_AVAILABLE and keras is not None:
-        MATERIAL_MODEL = keras.models.load_model(material_h5_path)
-        MATERIAL_MODEL.trainable = False
-        material_status = f"✅ Trained material classifier loaded ({os.path.getsize(material_h5_path)/1e6:.1f}MB)"
-    else:
-        material_status = "✅ Heuristic/MobileNet material classifier active"
-except Exception as e:
-    material_status = f"⚠️ Material classification fallback: {e}"
-    
-    MODELS_STATUS = {
-        'yolo': yolo_status,
-        'segmentation': seg_status,
-        'material': material_status
-    }
-    
-    print("✅ Models initialization completed for API")
-    
-except Exception as e:
-    print(f"⚠️ Model loading error (continuing with graceful degradation): {e}")
-    YOLO_MODEL = None
-    SEGMENTATION_MODEL = None
-    MATERIAL_MODEL = None
-    MODELS_STATUS = {'status': 'degraded', 'error': str(e)}
+def get_api_material_model():
+    """Lazily load material classification model if weights are available on disk"""
+    global MATERIAL_MODEL
+    if MATERIAL_MODEL is None and TF_AVAILABLE and keras is not None:
+        material_h5_path = os.path.join(os.path.dirname(__file__), "materialclassification_model/material_classifier.h5")
+        if os.path.exists(material_h5_path):
+            try:
+                MATERIAL_MODEL = keras.models.load_model(material_h5_path)
+                MATERIAL_MODEL.trainable = False
+                print(f"✅ Lazy-loaded material classifier: {material_h5_path}")
+            except Exception as e:
+                print(f"⚠️ Material classifier lazy-load note: {e}")
+    return MATERIAL_MODEL
+
+MODELS_STATUS = {
+    'yolo': "✅ Ready (Lazy-loaded / heuristic fallback)",
+    'segmentation': "✅ Ready (Lazy-loaded / Canny edge fallback)",
+    'material': "✅ Ready (Texture/color classifier fallback)"
+}
+print("✅ Models initialization configured for low-memory cloud deployment")
+
 
 # Cache last analysis so analytics tab / PDF can use the most recent uploaded image
 LAST_ANALYSIS = None
@@ -1280,13 +1270,13 @@ def analyze_image_comprehensive(image_np, px_to_cm_ratio=0.1, confidence_thresho
         # Perform all analyses using finalwebapp.py functions
 
         # 1. YOLO Crack Detection
-        annotated_image, crack_details = detect_with_yolo(image_np, px_to_cm_ratio, YOLO_MODEL)
+        annotated_image, crack_details = detect_with_yolo(image_np, px_to_cm_ratio, get_api_yolo_model())
 
         # 2. Biological Growth Detection
         growth_analysis, growth_image = detect_biological_growth(image_np, crack_details)
 
         # 3. Image Segmentation
-        result = segment_image(image_np, SEGMENTATION_MODEL)
+        result = segment_image(image_np, get_api_segmentation_model())
         if isinstance(result, tuple):
             segmented_image, seg_results = result
         else:
@@ -1315,7 +1305,7 @@ def analyze_image_comprehensive(image_np, px_to_cm_ratio=0.1, confidence_thresho
         edges = apply_canny_edge_detection(image_np)
 
         # 6. Material Classification
-        material, probabilities = classify_material(image_np, MATERIAL_MODEL)
+        material, probabilities = classify_material(image_np, get_api_material_model())
         material_analysis = {
             'predicted_material': material,
             'probabilities': probabilities
@@ -1611,7 +1601,7 @@ def analyze():
         try:
             # 1. YOLO Crack Detection
             print("   [1/6] Detecting cracks...")
-            annotated_image, crack_details = detect_with_yolo(image_np, px_to_cm_ratio, YOLO_MODEL)
+            annotated_image, crack_details = detect_with_yolo(image_np, px_to_cm_ratio, get_api_yolo_model())
             
             # 2. Biological Growth Detection
             print("   [2/6] Detecting biological growth...")
@@ -1619,7 +1609,7 @@ def analyze():
             
             # 3. Image Segmentation
             print("   [3/6] Segmenting image...")
-            result = segment_image(image_np, SEGMENTATION_MODEL)
+            result = segment_image(image_np, get_api_segmentation_model())
             if isinstance(result, tuple):
                 segmented_image, seg_results = result
             else:
@@ -1654,7 +1644,7 @@ def analyze():
             
             # 6. Material Classification
             print("   [6/6] Classifying material...")
-            material, probabilities = classify_material(image_np, MATERIAL_MODEL)
+            material, probabilities = classify_material(image_np, get_api_material_model())
             material_analysis = {
                 'predicted_material': material,
                 'probabilities': probabilities
@@ -2151,10 +2141,10 @@ def analyze_video():
                 frame_num = frame_count
                 try:
                     # Analyze frame
-                    annotated_image, crack_details = detect_with_yolo(frame, px_to_cm_ratio, YOLO_MODEL)
+                    annotated_image, crack_details = detect_with_yolo(frame, px_to_cm_ratio, get_api_yolo_model())
                     growth_analysis, growth_image = detect_biological_growth(frame, crack_details)
                     
-                    result = segment_image(frame, SEGMENTATION_MODEL)
+                    result = segment_image(frame, get_api_segmentation_model())
                     if isinstance(result, tuple):
                         segmented_image, seg_results = result
                     else:
@@ -2781,9 +2771,9 @@ def camera_capture():
         import numpy as np
         from ultralytics import YOLO
         
-        # Load models (similar to camera_capture.py)
-        yolo_model = YOLO("runs/detect/train3/weights/best.pt")
-        segmentation_model = YOLO("segmentation_model/weights/best.pt")
+        # Load models safely via lazy getters
+        yolo_model = get_api_yolo_model()
+        segmentation_model = get_api_segmentation_model()
         
         # Try to capture from camera
         cap = cv2.VideoCapture(0)
@@ -2807,21 +2797,22 @@ def camera_capture():
         crack_details = []
         
         # YOLO detection
-        results = yolo_model(frame.copy())
-        for result in results:
-            boxes = result.boxes
-            for box in boxes:
-                x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int)
-                w, h = (x2 - x1), (y2 - y1)
-                label = yolo_model.names[int(box.cls[0])]
-                conf = box.conf[0].cpu().numpy()
-                crack_details.append({
-                    'label': label,
-                    'bbox': (x1, y1, x2, y2),
-                    'width_cm': w * px_to_cm_ratio,
-                    'length_cm': h * px_to_cm_ratio,
-                    'confidence': conf
-                })
+        if yolo_model is not None:
+            results = yolo_model(frame.copy())
+            for result in results:
+                boxes = result.boxes
+                for box in boxes:
+                    x1, y1, x2, y2 = box.xyxy[0].cpu().numpy().astype(int)
+                    w, h = (x2 - x1), (y2 - y1)
+                    label = yolo_model.names[int(box.cls[0])] if hasattr(yolo_model, 'names') else 'crack'
+                    conf = float(box.conf[0].cpu().numpy())
+                    crack_details.append({
+                        'label': label,
+                        'bbox': (x1, y1, x2, y2),
+                        'width_cm': w * px_to_cm_ratio,
+                        'length_cm': h * px_to_cm_ratio,
+                        'confidence': conf
+                    })
         
         # Biological growth detection
         growth_image, growth_detected, growth_area_px = detect_biological_growth_advanced(frame)
@@ -2830,9 +2821,14 @@ def camera_capture():
         material, probabilities = classify_material(frame)
         
         # Segmentation
-        image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        seg_results = segmentation_model.predict(source=image_rgb, conf=0.3, save=False)
-        segmented_image = seg_results[0].plot()
+        segmented_image = frame.copy()
+        if segmentation_model is not None:
+            image_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            seg_results = segmentation_model.predict(source=image_rgb, conf=0.3, save=False)
+            if seg_results and len(seg_results) > 0:
+                segmented_image = seg_results[0].plot()
+        else:
+            segmented_image, _ = segment_image(frame)
         
         # Depth estimation
         equalized = preprocess_image_for_depth_estimation(frame)
@@ -2916,7 +2912,7 @@ def capture_and_analyze():
         
         # Analyze the captured frame using existing ML functions
         try:
-            annotated_image, crack_details = detect_with_yolo(frame, 0.1, YOLO_MODEL)
+            annotated_image, crack_details = detect_with_yolo(frame, 0.1, get_api_yolo_model())
             growth_analysis, growth_image = detect_biological_growth(frame, crack_details)
             material_name, material_probs = classify_material(frame)  # Unpack tuple
             
@@ -3519,9 +3515,10 @@ def crack_length():
         print("🔍 Stage 1: Running crack detection model...")
         detection_overlay = image_rgb.copy()
         crack_boxes = []
-        if YOLO_MODEL is not None:
+        active_yolo = get_api_yolo_model()
+        if active_yolo is not None:
             try:
-                det_res = YOLO_MODEL.predict(source=image_rgb, conf=confidence_threshold, save=False, verbose=False)
+                det_res = active_yolo.predict(source=image_rgb, conf=confidence_threshold, save=False, verbose=False)
                 if det_res and len(det_res) > 0:
                     plotted = det_res[0].plot()
                     if cv2 is not None and plotted is not None:
@@ -3534,7 +3531,7 @@ def crack_length():
                             xy = b.xyxy[0].cpu().numpy().tolist()
                             conf = float(b.conf[0].cpu().numpy())
                             cls_id = int(b.cls[0].cpu().numpy())
-                            cls_name = YOLO_MODEL.names.get(cls_id, "Crack") if hasattr(YOLO_MODEL, 'names') else "Crack"
+                            cls_name = active_yolo.names.get(cls_id, "Crack") if hasattr(active_yolo, 'names') else "Crack"
                             crack_boxes.append({
                                 "box": [round(x, 1) for x in xy],
                                 "confidence": round(conf, 3),
@@ -3553,10 +3550,11 @@ def crack_length():
         print("🟣 Stage 2: Running crack segmentation model...")
         mask = None
         seg_overlay = image_rgb.copy()
-        if SEGMENTATION_MODEL is not None:
+        active_seg = get_api_segmentation_model()
+        if active_seg is not None:
             try:
                 from crack_quantification.api_adapter import masks_from_segmentation_results
-                seg_res = SEGMENTATION_MODEL.predict(source=image_rgb, conf=confidence_threshold, save=False, verbose=False)
+                seg_res = active_seg.predict(source=image_rgb, conf=confidence_threshold, save=False, verbose=False)
                 if seg_res and len(seg_res) > 0:
                     masks_list = masks_from_segmentation_results(seg_res[0], image_rgb.shape, fallback_mask=image_rgb)
                     if masks_list:
