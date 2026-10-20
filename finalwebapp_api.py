@@ -172,9 +172,14 @@ except Exception as e:
         }
 
 # Unified Analysis Engine disabled - keeping only 3 main pages
-UNIFIED_ANALYSIS_AVAILABLE = False
+FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend', 'build')
+FRONTEND_STATIC_DIR = os.path.join(FRONTEND_BUILD_DIR, 'static')
 
-app = Flask(__name__)
+app = Flask(
+    __name__,
+    static_folder=FRONTEND_STATIC_DIR,
+    static_url_path='/static'
+)
 CORS(app)
 app.json.sort_keys = False
 
@@ -1483,20 +1488,30 @@ def analyze_image_comprehensive(image_np, px_to_cm_ratio=0.1, confidence_thresho
 
 
 
-FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend', 'build')
+@app.route('/static/<path:filename>')
+def serve_frontend_static(filename):
+    """Explicit handler for React static CSS/JS/media files"""
+    return send_from_directory(FRONTEND_STATIC_DIR, filename)
 
 @app.route('/', defaults={'path': ''}, methods=['GET'])
 @app.route('/<path:path>', methods=['GET'])
 def home_or_spa(path):
     """Serve React production SPA build if available, otherwise return API info"""
+    if path.startswith('api'):
+        return jsonify({"error": "Endpoint not found"}), 404
+
     if os.path.exists(FRONTEND_BUILD_DIR):
+        if path.startswith('static/'):
+            subpath = path[len('static/'):]
+            return send_from_directory(FRONTEND_STATIC_DIR, subpath)
+
         target = os.path.join(FRONTEND_BUILD_DIR, path)
         if path != "" and os.path.exists(target) and not os.path.isdir(target):
             return send_from_directory(FRONTEND_BUILD_DIR, path)
-        if not path.startswith('api'):
-            index_file = os.path.join(FRONTEND_BUILD_DIR, 'index.html')
-            if os.path.exists(index_file):
-                return send_from_directory(FRONTEND_BUILD_DIR, 'index.html')
+
+        index_file = os.path.join(FRONTEND_BUILD_DIR, 'index.html')
+        if os.path.exists(index_file):
+            return send_from_directory(FRONTEND_BUILD_DIR, 'index.html')
 
     # API information endpoint fallback
     return jsonify({
