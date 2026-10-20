@@ -41,8 +41,8 @@ COPY planar_calibration /app/planar_calibration
 COPY validation_platform /app/validation_platform
 COPY templates /app/templates
 
-# Copy pre-compiled React production build for unified single-container serving
-COPY frontend/build /app/frontend/build
+# Copy frontend application and compiled production build for unified single-container serving
+COPY frontend /app/frontend
 
 # Create directory structure for models and runtime outputs
 RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
