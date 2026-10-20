@@ -1,0 +1,4 @@
+strategy_id,strategy_name,total_windows_fleet,fleet_valid_deck_pixels,fleet_covered_valid_pixels,fleet_valid_coverage_pct,fleet_uncovered_valid_pixels,fleet_uncovered_pct,class2_coverage_pct,class3_coverage_pct,single_physical_pixel_scoring,primary_recommendation_status
+Strategy_A,Non-Overlapping 256x256 (Top-Left),56,6089851,3621237,59.46,2468614,40.54,70.88,70.18,Yes,Secondary Diagnostic Benchmark Only
+Strategy_B,"Sliding-Window 256x256 (Stride 128, No End-Anchor)",198,6089851,5194791,85.3,895060,14.7,94.07,95.6,No (overlaps double-counted if patches evaluated independently),REJECTED (Arbitrary edge loss & double-counting)
+Strategy_C,Full-Bridge Sliding-Window Inference with End-Anchoring & Logit Accumulation,322,6089851,6089851,100.0,0,0.0,100.0,100.0,Yes,RECOMMENDED for Primary Evaluation Benchmark

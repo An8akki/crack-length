@@ -192,3 +192,22 @@ outputs/
 # Keep templates (DON'T ignore these)
 !.env.example
 !render.env
+
+# Large archive datasets (local only, never commit to git)
+RGBD_Concrete_Crack_Dataset.zip
+*.zip
+
+# Allow research project audit files, manifests, baseline code, reports, and handover
+!SDNET2021_Audit/**
+!SDNET2021_Audit/**/*.csv
+!SDNET2021_Audit/**/*.json
+!SDNET2021_Audit/**/*.png
+!SDNET2021_Audit/**/*.pt
+!SDNET2021_Audit/**/*.sha256
+!SDNET2021_Audit/**/*.txt
+!SDNET2021_Audit/**/*.md
+!SDNET2021_Audit/**/*.py
+SDNET2021_Audit/**/__pycache__/
+SDNET2021_Audit/**/*.pyc
+
+

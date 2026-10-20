@@ -1,0 +1,6 @@
+tile_id,grid_type,tile_size,row_idx,col_idx,y_min,y_max,x_min,x_max,total_pixels,valid_pixels,invalid_pixels,valid_ratio,sound_pixels,class2_pixels,class3_pixels,delam_total_pixels,sound_ratio,class2_ratio,class3_ratio,delam_ratio,has_class2,has_class3,has_delam,is_retained,exclusion_reason
+B1_384_centered_0_0,centered,384,0,0,11,395,38,422,147456,147456,0,1.0,109951,30324,7181,37505,0.7457,0.2056,0.0487,0.2543,True,True,True,True,NONE
+B1_384_centered_1_0,centered,384,1,0,395,779,38,422,147456,146755,701,0.9952,99041,41958,5756,47714,0.6749,0.2859,0.0392,0.3251,True,True,True,True,NONE
+B1_384_centered_2_0,centered,384,2,0,779,1163,38,422,147456,147456,0,1.0,113402,22952,11102,34054,0.7691,0.1557,0.0753,0.2309,True,True,True,True,NONE
+B1_384_centered_3_0,centered,384,3,0,1163,1547,38,422,147456,147359,97,0.9993,107427,29307,10625,39932,0.729,0.1989,0.0721,0.271,True,True,True,True,NONE
+B1_384_centered_4_0,centered,384,4,0,1547,1931,38,422,147456,143549,3907,0.9735,110869,25152,7528,32680,0.7723,0.1752,0.0524,0.2277,True,True,True,True,NONE

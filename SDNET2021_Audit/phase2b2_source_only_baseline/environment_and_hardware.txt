@@ -1,0 +1,20 @@
+=== Hardware and Environment Configuration ===
+OS: Windows 11 (Version: 10.0.26200)
+Machine Architecture: AMD64
+Processor: Intel64 Family 6 Model 140 Stepping 1, GenuineIntel
+Logical CPU Cores: 8
+Total RAM: 15.40 GB
+Available RAM: 3.54 GB
+
+=== Python and PyTorch Environment ===
+Python Version: 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
+PyTorch Version: 2.8.0+cpu
+CUDA Available: False
+Execution Device: CPU (Intel MKL/OpenMP backend)
+Torch Default Threads: 4
+
+=== Reproducibility and Determinism Policy ===
+Deterministic Seeds Configured: Python random, NumPy random, PyTorch manual_seed.
+Seeds Evaluated: [42, 123, 999] across 5 LOBO folds (15 total runs).
+Deterministic Algorithms Flag: torch.use_deterministic_algorithms(False) on CPU
+Note: PyTorch CPU convolution and adaptive pool operations lack bitwise-identical determinism across varying CPU instruction sets, but seeding ensures exact pseudorandom initialization and batch shuffling sequence reproducibility.

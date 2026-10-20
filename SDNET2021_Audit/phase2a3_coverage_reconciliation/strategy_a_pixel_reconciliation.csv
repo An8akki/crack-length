@@ -1,0 +1,6 @@
+bridge_id,bridge_name,image_width,image_height,total_pixels,valid_deck_pixels,window_size,stride,grid_rows,grid_cols,window_count,covered_valid_pixels,uncovered_valid_pixels,valid_deck_coverage_pct,phase2a_reported_retained_valid,reconciliation_delta,discrepancy_root_cause
+B1,Forest River NB,461,1942,895262,858114,256x256,256,7,1,7,447560,410554,52.1562,447211,349,Preliminary pilot mask vs canonical mask edge inclusion (+349 px)
+B2,Forest River SB,1626,401,652026,621161,256x256,256,1,6,6,393216,227945,63.3034,393216,0,Exact match across all audits (0 delta)
+B3,Park River Median,4326,411,1777986,1757327,256x256,256,1,16,16,1036234,721093,58.9665,1041833,-5599,"Exclusion of scanner black zero-padding [0,0,0] from valid deck (-5,599 px)"
+B4,Park River North Bound,2991,371,1109661,1109661,256x256,256,1,11,11,720896,388765,64.9654,720896,0,Exact match across all audits (0 delta)
+B5,Park River South Bound,451,4174,1882474,1743588,256x256,256,16,1,16,1023331,720257,58.6911,989583,33748,"Inclusion of boundary tiles r1_c0 and r4_c0 valid deck pixels upon strict mask decoding (+33,748 px)"

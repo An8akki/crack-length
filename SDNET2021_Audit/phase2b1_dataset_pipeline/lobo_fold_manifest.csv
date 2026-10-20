@@ -1,0 +1,6 @@
+fold_id,target_bridge_id,val_bridge_id,train_bridge_ids,source_train_patches,source_val_patches,target_uda_patches,target_eval_sealed_patches,total_fold_patches,target_uda_images_only,target_labels_sealed_offline,scoring_rule
+fold_1,B1,B2,"B3,B4,B5",241,36,45,45,322,True,True,Strategy C full-raster stitched inference (1 evaluation per physical valid pixel)
+fold_2,B2,B3,"B1,B4,B5",187,99,36,36,322,True,True,Strategy C full-raster stitched inference (1 evaluation per physical valid pixel)
+fold_3,B3,B4,"B1,B2,B5",177,46,99,99,322,True,True,Strategy C full-raster stitched inference (1 evaluation per physical valid pixel)
+fold_4,B4,B5,"B1,B2,B3",180,96,46,46,322,True,True,Strategy C full-raster stitched inference (1 evaluation per physical valid pixel)
+fold_5,B5,B1,"B2,B3,B4",181,45,96,96,322,True,True,Strategy C full-raster stitched inference (1 evaluation per physical valid pixel)

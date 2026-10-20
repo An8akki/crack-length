@@ -1,0 +1,371 @@
+{
+  "fold_id": "fold_2",
+  "target_bridge_id": "B2",
+  "dimensions": {
+    "width": 1626,
+    "height": 401
+  },
+  "total_patches": 36,
+  "patches": [
+    {
+      "patch_id": "B2_c_r00_c00_y0000_x0000",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B2_c_r00_c00_y0000_x0000_img.png",
+      "mask_file": "B2_c_r00_c00_y0000_x0000_mask.png",
+      "valid_file": "B2_c_r00_c00_y0000_x0000_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c01_y0000_x0128",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B2_c_r00_c01_y0000_x0128_img.png",
+      "mask_file": "B2_c_r00_c01_y0000_x0128_mask.png",
+      "valid_file": "B2_c_r00_c01_y0000_x0128_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c02_y0000_x0256",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 256,
+      "x_max": 512,
+      "image_file": "B2_c_r00_c02_y0000_x0256_img.png",
+      "mask_file": "B2_c_r00_c02_y0000_x0256_mask.png",
+      "valid_file": "B2_c_r00_c02_y0000_x0256_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c03_y0000_x0384",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 384,
+      "x_max": 640,
+      "image_file": "B2_c_r00_c03_y0000_x0384_img.png",
+      "mask_file": "B2_c_r00_c03_y0000_x0384_mask.png",
+      "valid_file": "B2_c_r00_c03_y0000_x0384_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c04_y0000_x0512",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 512,
+      "x_max": 768,
+      "image_file": "B2_c_r00_c04_y0000_x0512_img.png",
+      "mask_file": "B2_c_r00_c04_y0000_x0512_mask.png",
+      "valid_file": "B2_c_r00_c04_y0000_x0512_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c05_y0000_x0640",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 640,
+      "x_max": 896,
+      "image_file": "B2_c_r00_c05_y0000_x0640_img.png",
+      "mask_file": "B2_c_r00_c05_y0000_x0640_mask.png",
+      "valid_file": "B2_c_r00_c05_y0000_x0640_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c06_y0000_x0768",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 768,
+      "x_max": 1024,
+      "image_file": "B2_c_r00_c06_y0000_x0768_img.png",
+      "mask_file": "B2_c_r00_c06_y0000_x0768_mask.png",
+      "valid_file": "B2_c_r00_c06_y0000_x0768_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c07_y0000_x0896",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 896,
+      "x_max": 1152,
+      "image_file": "B2_c_r00_c07_y0000_x0896_img.png",
+      "mask_file": "B2_c_r00_c07_y0000_x0896_mask.png",
+      "valid_file": "B2_c_r00_c07_y0000_x0896_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c08_y0000_x1024",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 1024,
+      "x_max": 1280,
+      "image_file": "B2_c_r00_c08_y0000_x1024_img.png",
+      "mask_file": "B2_c_r00_c08_y0000_x1024_mask.png",
+      "valid_file": "B2_c_r00_c08_y0000_x1024_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c09_y0000_x1152",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 1152,
+      "x_max": 1408,
+      "image_file": "B2_c_r00_c09_y0000_x1152_img.png",
+      "mask_file": "B2_c_r00_c09_y0000_x1152_mask.png",
+      "valid_file": "B2_c_r00_c09_y0000_x1152_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c10_y0000_x1280",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 1280,
+      "x_max": 1536,
+      "image_file": "B2_c_r00_c10_y0000_x1280_img.png",
+      "mask_file": "B2_c_r00_c10_y0000_x1280_mask.png",
+      "valid_file": "B2_c_r00_c10_y0000_x1280_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r00_c11_y0000_x1370",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 1370,
+      "x_max": 1626,
+      "image_file": "B2_c_r00_c11_y0000_x1370_img.png",
+      "mask_file": "B2_c_r00_c11_y0000_x1370_mask.png",
+      "valid_file": "B2_c_r00_c11_y0000_x1370_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c00_y0128_x0000",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B2_c_r01_c00_y0128_x0000_img.png",
+      "mask_file": "B2_c_r01_c00_y0128_x0000_mask.png",
+      "valid_file": "B2_c_r01_c00_y0128_x0000_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c01_y0128_x0128",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B2_c_r01_c01_y0128_x0128_img.png",
+      "mask_file": "B2_c_r01_c01_y0128_x0128_mask.png",
+      "valid_file": "B2_c_r01_c01_y0128_x0128_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c02_y0128_x0256",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 256,
+      "x_max": 512,
+      "image_file": "B2_c_r01_c02_y0128_x0256_img.png",
+      "mask_file": "B2_c_r01_c02_y0128_x0256_mask.png",
+      "valid_file": "B2_c_r01_c02_y0128_x0256_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c03_y0128_x0384",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 384,
+      "x_max": 640,
+      "image_file": "B2_c_r01_c03_y0128_x0384_img.png",
+      "mask_file": "B2_c_r01_c03_y0128_x0384_mask.png",
+      "valid_file": "B2_c_r01_c03_y0128_x0384_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c04_y0128_x0512",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 512,
+      "x_max": 768,
+      "image_file": "B2_c_r01_c04_y0128_x0512_img.png",
+      "mask_file": "B2_c_r01_c04_y0128_x0512_mask.png",
+      "valid_file": "B2_c_r01_c04_y0128_x0512_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c05_y0128_x0640",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 640,
+      "x_max": 896,
+      "image_file": "B2_c_r01_c05_y0128_x0640_img.png",
+      "mask_file": "B2_c_r01_c05_y0128_x0640_mask.png",
+      "valid_file": "B2_c_r01_c05_y0128_x0640_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c06_y0128_x0768",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 768,
+      "x_max": 1024,
+      "image_file": "B2_c_r01_c06_y0128_x0768_img.png",
+      "mask_file": "B2_c_r01_c06_y0128_x0768_mask.png",
+      "valid_file": "B2_c_r01_c06_y0128_x0768_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c07_y0128_x0896",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 896,
+      "x_max": 1152,
+      "image_file": "B2_c_r01_c07_y0128_x0896_img.png",
+      "mask_file": "B2_c_r01_c07_y0128_x0896_mask.png",
+      "valid_file": "B2_c_r01_c07_y0128_x0896_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c08_y0128_x1024",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 1024,
+      "x_max": 1280,
+      "image_file": "B2_c_r01_c08_y0128_x1024_img.png",
+      "mask_file": "B2_c_r01_c08_y0128_x1024_mask.png",
+      "valid_file": "B2_c_r01_c08_y0128_x1024_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c09_y0128_x1152",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 1152,
+      "x_max": 1408,
+      "image_file": "B2_c_r01_c09_y0128_x1152_img.png",
+      "mask_file": "B2_c_r01_c09_y0128_x1152_mask.png",
+      "valid_file": "B2_c_r01_c09_y0128_x1152_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c10_y0128_x1280",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 1280,
+      "x_max": 1536,
+      "image_file": "B2_c_r01_c10_y0128_x1280_img.png",
+      "mask_file": "B2_c_r01_c10_y0128_x1280_mask.png",
+      "valid_file": "B2_c_r01_c10_y0128_x1280_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r01_c11_y0128_x1370",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 1370,
+      "x_max": 1626,
+      "image_file": "B2_c_r01_c11_y0128_x1370_img.png",
+      "mask_file": "B2_c_r01_c11_y0128_x1370_mask.png",
+      "valid_file": "B2_c_r01_c11_y0128_x1370_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c00_y0145_x0000",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B2_c_r02_c00_y0145_x0000_img.png",
+      "mask_file": "B2_c_r02_c00_y0145_x0000_mask.png",
+      "valid_file": "B2_c_r02_c00_y0145_x0000_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c01_y0145_x0128",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B2_c_r02_c01_y0145_x0128_img.png",
+      "mask_file": "B2_c_r02_c01_y0145_x0128_mask.png",
+      "valid_file": "B2_c_r02_c01_y0145_x0128_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c02_y0145_x0256",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 256,
+      "x_max": 512,
+      "image_file": "B2_c_r02_c02_y0145_x0256_img.png",
+      "mask_file": "B2_c_r02_c02_y0145_x0256_mask.png",
+      "valid_file": "B2_c_r02_c02_y0145_x0256_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c03_y0145_x0384",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 384,
+      "x_max": 640,
+      "image_file": "B2_c_r02_c03_y0145_x0384_img.png",
+      "mask_file": "B2_c_r02_c03_y0145_x0384_mask.png",
+      "valid_file": "B2_c_r02_c03_y0145_x0384_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c04_y0145_x0512",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 512,
+      "x_max": 768,
+      "image_file": "B2_c_r02_c04_y0145_x0512_img.png",
+      "mask_file": "B2_c_r02_c04_y0145_x0512_mask.png",
+      "valid_file": "B2_c_r02_c04_y0145_x0512_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c05_y0145_x0640",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 640,
+      "x_max": 896,
+      "image_file": "B2_c_r02_c05_y0145_x0640_img.png",
+      "mask_file": "B2_c_r02_c05_y0145_x0640_mask.png",
+      "valid_file": "B2_c_r02_c05_y0145_x0640_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c06_y0145_x0768",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 768,
+      "x_max": 1024,
+      "image_file": "B2_c_r02_c06_y0145_x0768_img.png",
+      "mask_file": "B2_c_r02_c06_y0145_x0768_mask.png",
+      "valid_file": "B2_c_r02_c06_y0145_x0768_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c07_y0145_x0896",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 896,
+      "x_max": 1152,
+      "image_file": "B2_c_r02_c07_y0145_x0896_img.png",
+      "mask_file": "B2_c_r02_c07_y0145_x0896_mask.png",
+      "valid_file": "B2_c_r02_c07_y0145_x0896_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c08_y0145_x1024",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 1024,
+      "x_max": 1280,
+      "image_file": "B2_c_r02_c08_y0145_x1024_img.png",
+      "mask_file": "B2_c_r02_c08_y0145_x1024_mask.png",
+      "valid_file": "B2_c_r02_c08_y0145_x1024_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c09_y0145_x1152",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 1152,
+      "x_max": 1408,
+      "image_file": "B2_c_r02_c09_y0145_x1152_img.png",
+      "mask_file": "B2_c_r02_c09_y0145_x1152_mask.png",
+      "valid_file": "B2_c_r02_c09_y0145_x1152_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c10_y0145_x1280",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 1280,
+      "x_max": 1536,
+      "image_file": "B2_c_r02_c10_y0145_x1280_img.png",
+      "mask_file": "B2_c_r02_c10_y0145_x1280_mask.png",
+      "valid_file": "B2_c_r02_c10_y0145_x1280_valid.png"
+    },
+    {
+      "patch_id": "B2_c_r02_c11_y0145_x1370",
+      "y_min": 145,
+      "y_max": 401,
+      "x_min": 1370,
+      "x_max": 1626,
+      "image_file": "B2_c_r02_c11_y0145_x1370_img.png",
+      "mask_file": "B2_c_r02_c11_y0145_x1370_mask.png",
+      "valid_file": "B2_c_r02_c11_y0145_x1370_valid.png"
+    }
+  ]
+}

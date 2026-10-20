@@ -1,0 +1,461 @@
+{
+  "fold_id": "fold_1",
+  "target_bridge_id": "B1",
+  "dimensions": {
+    "width": 461,
+    "height": 1942
+  },
+  "total_patches": 45,
+  "patches": [
+    {
+      "patch_id": "B1_c_r00_c00_y0000_x0000",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r00_c00_y0000_x0000_img.png",
+      "mask_file": "B1_c_r00_c00_y0000_x0000_mask.png",
+      "valid_file": "B1_c_r00_c00_y0000_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r00_c01_y0000_x0128",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r00_c01_y0000_x0128_img.png",
+      "mask_file": "B1_c_r00_c01_y0000_x0128_mask.png",
+      "valid_file": "B1_c_r00_c01_y0000_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r00_c02_y0000_x0205",
+      "y_min": 0,
+      "y_max": 256,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r00_c02_y0000_x0205_img.png",
+      "mask_file": "B1_c_r00_c02_y0000_x0205_mask.png",
+      "valid_file": "B1_c_r00_c02_y0000_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r01_c00_y0128_x0000",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r01_c00_y0128_x0000_img.png",
+      "mask_file": "B1_c_r01_c00_y0128_x0000_mask.png",
+      "valid_file": "B1_c_r01_c00_y0128_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r01_c01_y0128_x0128",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r01_c01_y0128_x0128_img.png",
+      "mask_file": "B1_c_r01_c01_y0128_x0128_mask.png",
+      "valid_file": "B1_c_r01_c01_y0128_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r01_c02_y0128_x0205",
+      "y_min": 128,
+      "y_max": 384,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r01_c02_y0128_x0205_img.png",
+      "mask_file": "B1_c_r01_c02_y0128_x0205_mask.png",
+      "valid_file": "B1_c_r01_c02_y0128_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r02_c00_y0256_x0000",
+      "y_min": 256,
+      "y_max": 512,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r02_c00_y0256_x0000_img.png",
+      "mask_file": "B1_c_r02_c00_y0256_x0000_mask.png",
+      "valid_file": "B1_c_r02_c00_y0256_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r02_c01_y0256_x0128",
+      "y_min": 256,
+      "y_max": 512,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r02_c01_y0256_x0128_img.png",
+      "mask_file": "B1_c_r02_c01_y0256_x0128_mask.png",
+      "valid_file": "B1_c_r02_c01_y0256_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r02_c02_y0256_x0205",
+      "y_min": 256,
+      "y_max": 512,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r02_c02_y0256_x0205_img.png",
+      "mask_file": "B1_c_r02_c02_y0256_x0205_mask.png",
+      "valid_file": "B1_c_r02_c02_y0256_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r03_c00_y0384_x0000",
+      "y_min": 384,
+      "y_max": 640,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r03_c00_y0384_x0000_img.png",
+      "mask_file": "B1_c_r03_c00_y0384_x0000_mask.png",
+      "valid_file": "B1_c_r03_c00_y0384_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r03_c01_y0384_x0128",
+      "y_min": 384,
+      "y_max": 640,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r03_c01_y0384_x0128_img.png",
+      "mask_file": "B1_c_r03_c01_y0384_x0128_mask.png",
+      "valid_file": "B1_c_r03_c01_y0384_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r03_c02_y0384_x0205",
+      "y_min": 384,
+      "y_max": 640,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r03_c02_y0384_x0205_img.png",
+      "mask_file": "B1_c_r03_c02_y0384_x0205_mask.png",
+      "valid_file": "B1_c_r03_c02_y0384_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r04_c00_y0512_x0000",
+      "y_min": 512,
+      "y_max": 768,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r04_c00_y0512_x0000_img.png",
+      "mask_file": "B1_c_r04_c00_y0512_x0000_mask.png",
+      "valid_file": "B1_c_r04_c00_y0512_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r04_c01_y0512_x0128",
+      "y_min": 512,
+      "y_max": 768,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r04_c01_y0512_x0128_img.png",
+      "mask_file": "B1_c_r04_c01_y0512_x0128_mask.png",
+      "valid_file": "B1_c_r04_c01_y0512_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r04_c02_y0512_x0205",
+      "y_min": 512,
+      "y_max": 768,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r04_c02_y0512_x0205_img.png",
+      "mask_file": "B1_c_r04_c02_y0512_x0205_mask.png",
+      "valid_file": "B1_c_r04_c02_y0512_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r05_c00_y0640_x0000",
+      "y_min": 640,
+      "y_max": 896,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r05_c00_y0640_x0000_img.png",
+      "mask_file": "B1_c_r05_c00_y0640_x0000_mask.png",
+      "valid_file": "B1_c_r05_c00_y0640_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r05_c01_y0640_x0128",
+      "y_min": 640,
+      "y_max": 896,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r05_c01_y0640_x0128_img.png",
+      "mask_file": "B1_c_r05_c01_y0640_x0128_mask.png",
+      "valid_file": "B1_c_r05_c01_y0640_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r05_c02_y0640_x0205",
+      "y_min": 640,
+      "y_max": 896,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r05_c02_y0640_x0205_img.png",
+      "mask_file": "B1_c_r05_c02_y0640_x0205_mask.png",
+      "valid_file": "B1_c_r05_c02_y0640_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r06_c00_y0768_x0000",
+      "y_min": 768,
+      "y_max": 1024,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r06_c00_y0768_x0000_img.png",
+      "mask_file": "B1_c_r06_c00_y0768_x0000_mask.png",
+      "valid_file": "B1_c_r06_c00_y0768_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r06_c01_y0768_x0128",
+      "y_min": 768,
+      "y_max": 1024,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r06_c01_y0768_x0128_img.png",
+      "mask_file": "B1_c_r06_c01_y0768_x0128_mask.png",
+      "valid_file": "B1_c_r06_c01_y0768_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r06_c02_y0768_x0205",
+      "y_min": 768,
+      "y_max": 1024,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r06_c02_y0768_x0205_img.png",
+      "mask_file": "B1_c_r06_c02_y0768_x0205_mask.png",
+      "valid_file": "B1_c_r06_c02_y0768_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r07_c00_y0896_x0000",
+      "y_min": 896,
+      "y_max": 1152,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r07_c00_y0896_x0000_img.png",
+      "mask_file": "B1_c_r07_c00_y0896_x0000_mask.png",
+      "valid_file": "B1_c_r07_c00_y0896_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r07_c01_y0896_x0128",
+      "y_min": 896,
+      "y_max": 1152,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r07_c01_y0896_x0128_img.png",
+      "mask_file": "B1_c_r07_c01_y0896_x0128_mask.png",
+      "valid_file": "B1_c_r07_c01_y0896_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r07_c02_y0896_x0205",
+      "y_min": 896,
+      "y_max": 1152,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r07_c02_y0896_x0205_img.png",
+      "mask_file": "B1_c_r07_c02_y0896_x0205_mask.png",
+      "valid_file": "B1_c_r07_c02_y0896_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r08_c00_y1024_x0000",
+      "y_min": 1024,
+      "y_max": 1280,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r08_c00_y1024_x0000_img.png",
+      "mask_file": "B1_c_r08_c00_y1024_x0000_mask.png",
+      "valid_file": "B1_c_r08_c00_y1024_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r08_c01_y1024_x0128",
+      "y_min": 1024,
+      "y_max": 1280,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r08_c01_y1024_x0128_img.png",
+      "mask_file": "B1_c_r08_c01_y1024_x0128_mask.png",
+      "valid_file": "B1_c_r08_c01_y1024_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r08_c02_y1024_x0205",
+      "y_min": 1024,
+      "y_max": 1280,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r08_c02_y1024_x0205_img.png",
+      "mask_file": "B1_c_r08_c02_y1024_x0205_mask.png",
+      "valid_file": "B1_c_r08_c02_y1024_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r09_c00_y1152_x0000",
+      "y_min": 1152,
+      "y_max": 1408,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r09_c00_y1152_x0000_img.png",
+      "mask_file": "B1_c_r09_c00_y1152_x0000_mask.png",
+      "valid_file": "B1_c_r09_c00_y1152_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r09_c01_y1152_x0128",
+      "y_min": 1152,
+      "y_max": 1408,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r09_c01_y1152_x0128_img.png",
+      "mask_file": "B1_c_r09_c01_y1152_x0128_mask.png",
+      "valid_file": "B1_c_r09_c01_y1152_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r09_c02_y1152_x0205",
+      "y_min": 1152,
+      "y_max": 1408,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r09_c02_y1152_x0205_img.png",
+      "mask_file": "B1_c_r09_c02_y1152_x0205_mask.png",
+      "valid_file": "B1_c_r09_c02_y1152_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r10_c00_y1280_x0000",
+      "y_min": 1280,
+      "y_max": 1536,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r10_c00_y1280_x0000_img.png",
+      "mask_file": "B1_c_r10_c00_y1280_x0000_mask.png",
+      "valid_file": "B1_c_r10_c00_y1280_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r10_c01_y1280_x0128",
+      "y_min": 1280,
+      "y_max": 1536,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r10_c01_y1280_x0128_img.png",
+      "mask_file": "B1_c_r10_c01_y1280_x0128_mask.png",
+      "valid_file": "B1_c_r10_c01_y1280_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r10_c02_y1280_x0205",
+      "y_min": 1280,
+      "y_max": 1536,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r10_c02_y1280_x0205_img.png",
+      "mask_file": "B1_c_r10_c02_y1280_x0205_mask.png",
+      "valid_file": "B1_c_r10_c02_y1280_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r11_c00_y1408_x0000",
+      "y_min": 1408,
+      "y_max": 1664,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r11_c00_y1408_x0000_img.png",
+      "mask_file": "B1_c_r11_c00_y1408_x0000_mask.png",
+      "valid_file": "B1_c_r11_c00_y1408_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r11_c01_y1408_x0128",
+      "y_min": 1408,
+      "y_max": 1664,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r11_c01_y1408_x0128_img.png",
+      "mask_file": "B1_c_r11_c01_y1408_x0128_mask.png",
+      "valid_file": "B1_c_r11_c01_y1408_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r11_c02_y1408_x0205",
+      "y_min": 1408,
+      "y_max": 1664,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r11_c02_y1408_x0205_img.png",
+      "mask_file": "B1_c_r11_c02_y1408_x0205_mask.png",
+      "valid_file": "B1_c_r11_c02_y1408_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r12_c00_y1536_x0000",
+      "y_min": 1536,
+      "y_max": 1792,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r12_c00_y1536_x0000_img.png",
+      "mask_file": "B1_c_r12_c00_y1536_x0000_mask.png",
+      "valid_file": "B1_c_r12_c00_y1536_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r12_c01_y1536_x0128",
+      "y_min": 1536,
+      "y_max": 1792,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r12_c01_y1536_x0128_img.png",
+      "mask_file": "B1_c_r12_c01_y1536_x0128_mask.png",
+      "valid_file": "B1_c_r12_c01_y1536_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r12_c02_y1536_x0205",
+      "y_min": 1536,
+      "y_max": 1792,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r12_c02_y1536_x0205_img.png",
+      "mask_file": "B1_c_r12_c02_y1536_x0205_mask.png",
+      "valid_file": "B1_c_r12_c02_y1536_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r13_c00_y1664_x0000",
+      "y_min": 1664,
+      "y_max": 1920,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r13_c00_y1664_x0000_img.png",
+      "mask_file": "B1_c_r13_c00_y1664_x0000_mask.png",
+      "valid_file": "B1_c_r13_c00_y1664_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r13_c01_y1664_x0128",
+      "y_min": 1664,
+      "y_max": 1920,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r13_c01_y1664_x0128_img.png",
+      "mask_file": "B1_c_r13_c01_y1664_x0128_mask.png",
+      "valid_file": "B1_c_r13_c01_y1664_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r13_c02_y1664_x0205",
+      "y_min": 1664,
+      "y_max": 1920,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r13_c02_y1664_x0205_img.png",
+      "mask_file": "B1_c_r13_c02_y1664_x0205_mask.png",
+      "valid_file": "B1_c_r13_c02_y1664_x0205_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r14_c00_y1686_x0000",
+      "y_min": 1686,
+      "y_max": 1942,
+      "x_min": 0,
+      "x_max": 256,
+      "image_file": "B1_c_r14_c00_y1686_x0000_img.png",
+      "mask_file": "B1_c_r14_c00_y1686_x0000_mask.png",
+      "valid_file": "B1_c_r14_c00_y1686_x0000_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r14_c01_y1686_x0128",
+      "y_min": 1686,
+      "y_max": 1942,
+      "x_min": 128,
+      "x_max": 384,
+      "image_file": "B1_c_r14_c01_y1686_x0128_img.png",
+      "mask_file": "B1_c_r14_c01_y1686_x0128_mask.png",
+      "valid_file": "B1_c_r14_c01_y1686_x0128_valid.png"
+    },
+    {
+      "patch_id": "B1_c_r14_c02_y1686_x0205",
+      "y_min": 1686,
+      "y_max": 1942,
+      "x_min": 205,
+      "x_max": 461,
+      "image_file": "B1_c_r14_c02_y1686_x0205_img.png",
+      "mask_file": "B1_c_r14_c02_y1686_x0205_mask.png",
+      "valid_file": "B1_c_r14_c02_y1686_x0205_valid.png"
+    }
+  ]
+}

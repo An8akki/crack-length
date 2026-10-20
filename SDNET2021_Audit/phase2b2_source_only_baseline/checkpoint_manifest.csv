@@ -1,0 +1,4 @@
+run_id,fold_id,seed,target_bridge,best_epoch,total_epochs,val_macro_delam_f1,checkpoint_path,checkpoint_sha256,frozen,freeze_timestamp
+fold_1_seed42,fold_1,42,B1,2,14,0.09396461459983355,C:\Users\Dell\Documents\SDNET2021_Audit\phase2b2_source_only_baseline\checkpoints\fold_1_seed42_best_checkpoint.pt,5bf64696b6f112156a60d2ba50a2967add1ab8b5ed561af791c954717789918c,True,2026-10-20T10:43:43.732691
+fold_1_seed123,fold_1,123,B1,17,29,0.10597009936636634,C:\Users\Dell\Documents\SDNET2021_Audit\phase2b2_source_only_baseline\checkpoints\fold_1_seed123_best_checkpoint.pt,8a45c7daf3687fd0fc9e377d89b06826dcdacafb160c099195dfd47b594d4413,True,2026-10-20T10:56:34.852210
+fold_1_seed999,fold_1,999,B1,1,13,0.20367068620685622,C:\Users\Dell\Documents\SDNET2021_Audit\phase2b2_source_only_baseline\checkpoints\fold_1_seed999_best_checkpoint.pt,025bbe4221adb3325f622b86cd8539442330d392b4becd99b42e79c3041ff8d5,True,2026-10-20T11:02:23.943051

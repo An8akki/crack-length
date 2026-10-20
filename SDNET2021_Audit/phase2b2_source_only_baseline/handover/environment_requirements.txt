@@ -1,0 +1,13 @@
+# Phase 2B.2 Environment Requirements
+# Project: AI-Based Concrete Delamination Characterization Under Cross-Bridge Domain Shift
+# Python Version: 3.12.10 (AMD64 / Windows 11 / Linux compatible)
+
+torch==2.8.0
+torchvision==0.23.0
+numpy==2.2.6
+pandas==2.3.2
+pillow==11.3.0
+scipy==1.16.1
+scikit-learn==1.7.2
+scikit-image==0.25.2
+tqdm==4.67.1

@@ -1,0 +1,6 @@
+bridge_id,bridge_name,width,height,total_pixels,sound_pixels,sound_pct,class2_pixels,class2_pct,class3_pixels,class3_pct,delam_total_pixels,delam_pct,excluded_white_pixels,excluded_black_pixels,unknown_pixels,valid_deck_pixels,valid_deck_pct,excluded_total_pixels,excluded_pct,discrepancy_vs_phase2a,discrepancy_vs_phase2a1
+B1,Forest River Northbound,461,1942,895262,662477,73.998,152149,16.995,43488,4.858,195637,21.852,37131,17,0,858114,95.851,37148,4.149,NONE (Identical),NONE (Identical)
+B2,Forest River Southbound,1626,401,652026,489219,75.031,107496,16.486,24446,3.749,131942,20.236,30803,62,0,621161,95.266,30865,4.734,NONE (Identical),NONE (Identical)
+B3,Park River Median,4326,411,1777986,1380331,77.635,298123,16.767,78873,4.436,376996,21.204,421,20238,0,1757327,98.838,20659,1.162,NONE (Identical),NONE (Identical)
+B4,Park River Northbound,2991,371,1109661,844908,76.141,215113,19.385,49640,4.473,264753,23.859,0,0,0,1109661,100.0,0,0.0,NONE (Identical),NONE (Identical)
+B5,Park River Southbound,451,4174,1882474,1409183,74.858,272292,14.465,62113,3.3,334405,17.764,138855,31,0,1743588,92.622,138886,7.378,NONE (Identical),NONE (Identical)

@@ -1,0 +1,8 @@
+tile_id,grid_type,tile_size,row_idx,col_idx,y_min,y_max,x_min,x_max,total_pixels,valid_pixels,invalid_pixels,valid_ratio,sound_pixels,class2_pixels,class3_pixels,delam_total_pixels,sound_ratio,class2_ratio,class3_ratio,delam_ratio,has_class2,has_class3,has_delam,is_retained,exclusion_reason
+B1_256_centered_0_0,centered,256,0,0,75,331,102,358,65536,65536,0,1.0,40462,20633,4441,25074,0.6174,0.3148,0.0678,0.3826,True,True,True,True,NONE
+B1_256_centered_1_0,centered,256,1,0,331,587,102,358,65536,65536,0,1.0,37523,23856,4157,28013,0.5726,0.364,0.0634,0.4274,True,True,True,True,NONE
+B1_256_centered_2_0,centered,256,2,0,587,843,102,358,65536,65536,0,1.0,44734,19087,1715,20802,0.6826,0.2912,0.0262,0.3174,True,True,True,True,NONE
+B1_256_centered_3_0,centered,256,3,0,843,1099,102,358,65536,65536,0,1.0,51040,10400,4096,14496,0.7788,0.1587,0.0625,0.2212,True,True,True,True,NONE
+B1_256_centered_4_0,centered,256,4,0,1099,1355,102,358,65536,65536,0,1.0,44700,13094,7742,20836,0.6821,0.1998,0.1181,0.3179,True,True,True,True,NONE
+B1_256_centered_5_0,centered,256,5,0,1355,1611,102,358,65536,65536,0,1.0,49049,14785,1702,16487,0.7484,0.2256,0.026,0.2516,True,True,True,True,NONE
+B1_256_centered_6_0,centered,256,6,0,1611,1867,102,358,65536,65536,0,1.0,49137,13474,2925,16399,0.7498,0.2056,0.0446,0.2502,True,True,True,True,NONE

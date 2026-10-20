@@ -1,0 +1,4 @@
+timestamp,run_id,fold_id,seed,target_bridge,checkpoint_file,checkpoint_sha256,access_type,integrity_verified
+2026-10-20T10:43:43.757161,fold_1_seed42,fold_1,42,B1,fold_1_seed42_best_checkpoint.pt,5bf64696b6f112156a60d2ba50a2967add1ab8b5ed561af791c954717789918c,post_freeze_target_inference,True
+2026-10-20T10:56:34.922235,fold_1_seed123,fold_1,123,B1,fold_1_seed123_best_checkpoint.pt,8a45c7daf3687fd0fc9e377d89b06826dcdacafb160c099195dfd47b594d4413,post_freeze_target_inference,True
+2026-10-20T11:02:23.964138,fold_1_seed999,fold_1,999,B1,fold_1_seed999_best_checkpoint.pt,025bbe4221adb3325f622b86cd8539442330d392b4becd99b42e79c3041ff8d5,post_freeze_target_inference,True

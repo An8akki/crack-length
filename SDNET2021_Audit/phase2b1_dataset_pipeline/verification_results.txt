@@ -1,0 +1,15 @@
+=== Phase 2B.1 Dataset Pipeline Validation Test Results ===
+
+Command: C:\Users\Dell\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\python.exe c:\Users\Dell\.gemini\antigravity-ide\scratch\ml_pipeline\scratch\dataset_validation_tests.py
+Exit Code: 0
+
+STDOUT:
+
+
+STDERR:
+........
+----------------------------------------------------------------------
+Ran 8 tests in 10.040s
+
+OK
+

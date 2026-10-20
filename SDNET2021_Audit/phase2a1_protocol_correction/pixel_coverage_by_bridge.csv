@@ -1,0 +1,16 @@
+bridge_id,strategy_id,strategy_name,total_windows,valid_deck_pixels_total,valid_deck_covered_pixels,valid_deck_covered_pct,uncovered_valid_pixels,uncovered_valid_pct,class2_covered_pixels,class2_covered_pct,class3_covered_pixels,class3_covered_pct,uncovered_edge_description,single_score_guaranteed,primary_recommendation
+B1,Strategy_A,Non-Overlapping 256x256 (Top-Left),7,858114,447560,52.16,410554,47.84,81114,53.31,14549,33.46,Right strip [256..461] (w=205px) and bottom strip [1792..1942] (h=150px),True,False
+B1,Strategy_B,"Sliding-Window 256x256 (Stride 128, No End-Anchor)",28,858114,718177,83.69,139937,16.31,141141,92.76,36607,84.18,Residual right edge [384..461] and bottom edge [1920..1942],False,False
+B1,Strategy_C,Full-Bridge Sliding-Window Inference with End-Anchoring & Logit Accumulation,45,858114,858114,100.0,0,0.0,152149,100.0,43488,100.0,NONE (100% full-bridge valid deck coverage),True,True
+B2,Strategy_A,Non-Overlapping 256x256 (Top-Left),6,621161,393216,63.3,227945,36.7,82196,76.46,13904,56.88,Right strip [256..1626] (w=1370px) and bottom strip [256..401] (h=145px),True,False
+B2,Strategy_B,"Sliding-Window 256x256 (Stride 128, No End-Anchor)",22,621161,585240,94.22,35921,5.78,106578,99.15,24446,100.0,Residual right edge [1536..1626] and bottom edge [384..401],False,False
+B2,Strategy_C,Full-Bridge Sliding-Window Inference with End-Anchoring & Logit Accumulation,36,621161,621161,100.0,0,0.0,107496,100.0,24446,100.0,NONE (100% full-bridge valid deck coverage),True,True
+B3,Strategy_A,Non-Overlapping 256x256 (Top-Left),16,1757327,1036234,58.97,721093,41.03,265065,88.91,76088,96.47,Right strip [256..4326] (w=4070px) and bottom strip [256..411] (h=155px),True,False
+B3,Strategy_B,"Sliding-Window 256x256 (Stride 128, No End-Anchor)",64,1757327,1609662,91.6,147665,8.4,297104,99.66,78758,99.85,Residual right edge [4224..4326] and bottom edge [384..411],False,False
+B3,Strategy_C,Full-Bridge Sliding-Window Inference with End-Anchoring & Logit Accumulation,99,1757327,1757327,100.0,0,0.0,298123,100.0,78873,100.0,NONE (100% full-bridge valid deck coverage),True,True
+B4,Strategy_A,Non-Overlapping 256x256 (Top-Left),11,1109661,720896,64.97,388765,35.03,166888,77.58,45849,92.36,Right strip [256..2991] (w=2735px) and bottom strip [256..371] (h=115px),True,False
+B4,Strategy_B,"Sliding-Window 256x256 (Stride 128, No End-Anchor)",22,1109661,753664,67.92,355997,32.08,168343,78.26,45849,92.36,Residual right edge [2944..2991] and bottom edge [256..371],False,False
+B4,Strategy_C,Full-Bridge Sliding-Window Inference with End-Anchoring & Logit Accumulation,46,1109661,1109661,100.0,0,0.0,215113,100.0,49640,100.0,NONE (100% full-bridge valid deck coverage),True,True
+B5,Strategy_A,Non-Overlapping 256x256 (Top-Left),16,1743588,1023331,58.69,720257,41.31,145568,53.46,31069,50.02,Right strip [256..451] (w=195px) and bottom strip [4096..4174] (h=78px),True,False
+B5,Strategy_B,"Sliding-Window 256x256 (Stride 128, No End-Anchor)",62,1743588,1528048,87.64,215540,12.36,270008,99.16,61525,99.05,Residual right edge [384..451] and bottom edge [4096..4174],False,False
+B5,Strategy_C,Full-Bridge Sliding-Window Inference with End-Anchoring & Logit Accumulation,96,1743588,1743588,100.0,0,0.0,272292,100.0,62113,100.0,NONE (100% full-bridge valid deck coverage),True,True

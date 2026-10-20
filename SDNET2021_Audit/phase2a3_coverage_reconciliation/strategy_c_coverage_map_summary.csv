@@ -1,0 +1,6 @@
+bridge_id,bridge_name,dimensions,x_steps_count,y_steps_count,total_windows,total_window_pixel_appearances,geometric_covered_pixels,geometric_image_coverage_pct,valid_deck_pixels,covered_valid_deck_pixels,uncovered_valid_deck_pixels,valid_deck_coverage_pct,excluded_pixels_total,excluded_pixels_covered,excluded_pixel_coverage_pct,min_coverage_depth,max_coverage_depth,mean_coverage_depth,median_coverage_depth,scoring_rule
+B1,Forest River NB,461x1942,3,15,45,2949120,895262,100.0,858114,858114,0,100.0,37148,37148,100.0,1,9,3.2941,4.0,Logit accumulation + argmax (exactly 1 score per physical pixel)
+B2,Forest River SB,1626x401,12,3,36,2359296,652026,100.0,621161,621161,0,100.0,30865,30865,100.0,1,9,3.6184,4.0,Logit accumulation + argmax (exactly 1 score per physical pixel)
+B3,Park River Median,4326x411,33,3,99,6488064,1777986,100.0,1757327,1757327,0,100.0,20659,20659,100.0,1,9,3.6491,4.0,Logit accumulation + argmax (exactly 1 score per physical pixel)
+B4,Park River North Bound,2991x371,23,2,46,3014656,1109661,100.0,1109661,1109661,0,100.0,0,0,100.0,1,6,2.7167,2.0,Logit accumulation + argmax (exactly 1 score per physical pixel)
+B5,Park River South Bound,451x4174,3,32,96,6291456,1882474,100.0,1743588,1743588,0,100.0,138886,138886,100.0,1,9,3.3421,4.0,Logit accumulation + argmax (exactly 1 score per physical pixel)

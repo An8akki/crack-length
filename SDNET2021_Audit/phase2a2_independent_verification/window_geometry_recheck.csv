@@ -1,0 +1,16 @@
+bridge_id,strategy_id,window_size,stride,end_anchoring_applied,raw_window_count,deduplicated_window_count,min_coverage_overlaps,max_coverage_overlaps,mean_coverage_overlaps
+B1,Strategy_A,256,256,False,7,7,0,1,0.512
+B1,Strategy_B,256,128,False,28,28,0,4,2.05
+B1,Strategy_C,256,128,True,45,45,1,9,3.294
+B2,Strategy_A,256,256,False,6,6,0,1,0.603
+B2,Strategy_B,256,128,False,22,22,0,4,2.211
+B2,Strategy_C,256,128,True,36,36,1,9,3.618
+B3,Strategy_A,256,256,False,16,16,0,1,0.59
+B3,Strategy_B,256,128,False,64,64,0,4,2.359
+B3,Strategy_C,256,128,True,99,99,1,9,3.649
+B4,Strategy_A,256,256,False,11,11,0,1,0.65
+B4,Strategy_B,256,128,False,22,22,0,2,1.299
+B4,Strategy_C,256,128,True,46,46,1,6,2.717
+B5,Strategy_A,256,256,False,16,16,0,1,0.557
+B5,Strategy_B,256,128,False,62,62,0,4,2.158
+B5,Strategy_C,256,128,True,96,96,1,9,3.342

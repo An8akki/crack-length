@@ -1,0 +1,6 @@
+fold_id,target_bridge_id,target_bridge_name,source_bridge_ids,source_train_bridge_ids,source_val_bridge_id,target_test_patches_strat_a,source_train_patches_strat_a,source_val_patches_strat_a,source_train_patches_strat_c,source_val_patches_strat_c,target_unlabeled_inputs_allowed,target_labels_status
+Fold_1,B1,Forest River Northbound,B2+B3+B4+B5,B3+B4+B5,B2,7,43,6,148,22,Original thermogram patches only (for UDA CORAL/DANN covariance alignment),STRICTLY SEALED (Accessed only at offline post-training test time)
+Fold_2,B2,Forest River Southbound,B1+B3+B4+B5,B3+B4+B5,B1,6,43,7,148,27,Original thermogram patches only (for UDA CORAL/DANN covariance alignment),STRICTLY SEALED (Accessed only at offline post-training test time)
+Fold_3,B3,Park River Median,B1+B2+B4+B5,B1+B2+B5,B4,16,29,11,111,22,Original thermogram patches only (for UDA CORAL/DANN covariance alignment),STRICTLY SEALED (Accessed only at offline post-training test time)
+Fold_4,B4,Park River Northbound,B1+B2+B3+B5,B1+B2+B5,B3,11,29,16,111,64,Original thermogram patches only (for UDA CORAL/DANN covariance alignment),STRICTLY SEALED (Accessed only at offline post-training test time)
+Fold_5,B5,Park River Southbound,B1+B2+B3+B4,B1+B2+B3,B4,16,29,11,113,22,Original thermogram patches only (for UDA CORAL/DANN covariance alignment),STRICTLY SEALED (Accessed only at offline post-training test time)

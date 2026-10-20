@@ -1,0 +1,6 @@
+bridge_id,bridge_name,sound_pixel_count,exact_match_count,exact_match_pct,differing_count,differing_pct,mean_abs_diff,median_abs_diff,p50_diff,p75_diff,p90_diff,p95_diff,p99_diff,max_abs_diff,best_shift_dy,best_shift_dx,best_shift_mean_diff,shift_delta
+B1,Forest River Northbound,662477,662477,100.0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0.0,0.0
+B2,Forest River Southbound,489219,489219,100.0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0.0,0.0
+B3,Park River Median,1380331,1380331,100.0,0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0,0,0,0.0,0.0
+B4,Park River Northbound,844908,196451,23.251,648457,76.749,2.979,1.0,1.0,3.0,6.0,12.0,36.0,107,2,0,0.37,-2.609
+B5,Park River Southbound,1409183,113260,8.037,1295923,91.963,7.824,4.0,4.0,7.0,15.0,24.0,87.0,248,2,0,7.48,-0.343
