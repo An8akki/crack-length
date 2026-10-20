@@ -59,7 +59,7 @@ import base64
 import io
 import json
 import uuid
-from flask import Flask, request, jsonify, send_file
+from flask import Flask, request, jsonify, send_file, send_from_directory
 from flask_cors import CORS
 
 try:
@@ -1551,20 +1551,33 @@ def analyze_image_comprehensive(image_np, px_to_cm_ratio=0.1, confidence_thresho
 
 
 
-@app.route('/', methods=['GET'])
-def home():
-    """API information endpoint"""
+FRONTEND_BUILD_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'frontend', 'build')
+
+@app.route('/', defaults={'path': ''}, methods=['GET'])
+@app.route('/<path:path>', methods=['GET'])
+def home_or_spa(path):
+    """Serve React production SPA build if available, otherwise return API info"""
+    if os.path.exists(FRONTEND_BUILD_DIR):
+        target = os.path.join(FRONTEND_BUILD_DIR, path)
+        if path != "" and os.path.exists(target) and not os.path.isdir(target):
+            return send_from_directory(FRONTEND_BUILD_DIR, path)
+        if not path.startswith('api'):
+            index_file = os.path.join(FRONTEND_BUILD_DIR, 'index.html')
+            if os.path.exists(index_file):
+                return send_from_directory(FRONTEND_BUILD_DIR, 'index.html')
+
+    # API information endpoint fallback
     return jsonify({
         "name": "AI-Powered Structural Health Monitoring API",
         "version": "1.0.0",
         "status": "running",
         "description": "Flask API wrapper for structural health monitoring functionality",
         "models_status": MODELS_STATUS,
-            "endpoints": {
-                "health": "/api/health",
-                "analyze": "/api/analyze",
-                "crack_length": "/api/crack-length",
-            }
+        "endpoints": {
+            "health": "/api/health",
+            "analyze": "/api/analyze",
+            "crack_length": "/api/crack-length",
+        }
     })
 
 @app.route('/api/health', methods=['GET'])

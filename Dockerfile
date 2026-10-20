@@ -23,30 +23,33 @@ COPY requirements.txt .
 # Install Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy app code
+# Copy app code and core packages
 COPY finalwebapp_api.py .
 COPY finalwebapp.py .
 COPY pdf_report.py .
 COPY segmentation_with_localisation.py .
 COPY image_3d_heightmap.py .
-
-# Install git-lfs to ensure LFS files are properly downloaded
-RUN apt-get update && apt-get install -y git-lfs curl && rm -rf /var/lib/apt/lists/*
-
-# Copy all other Python files
+COPY hf_model_loader.py .
+COPY model_downloader.py .
 COPY *.py ./
 
-# Create directory structure for models, frontend, and runtime outputs
-# The Python app will check if actual model files exist and fall back to defaults if needed
+# Copy complete engineering modules
+COPY crack_depth /app/crack_depth
+COPY crack_quantification /app/crack_quantification
+COPY image_restoration /app/image_restoration
+COPY planar_calibration /app/planar_calibration
+COPY validation_platform /app/validation_platform
+COPY templates /app/templates
+
+# Copy pre-compiled React production build for unified single-container serving
+COPY frontend/build /app/frontend/build
+
+# Create directory structure for models and runtime outputs
 RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
     mkdir -p /app/segmentation_model/weights && \
     mkdir -p /app/materialclassification_model && \
-    mkdir -p /app/frontend/src /app/frontend/public && \
+    mkdir -p /app/uploads /app/outputs && \
     mkdir -p /app/__pycache__
-
-# Note: Model files in Git LFS will be downloaded during git clone with git-lfs installed
-# The hf_model_loader.py will download trained models at runtime from HF Hub
-# This avoids Docker build failures when optional directories don't exist in build context
 
 # Expose port
 EXPOSE 7860
