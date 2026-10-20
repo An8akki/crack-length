@@ -1,0 +1,39 @@
+{
+  "benchmark": "AI-Based Concrete Delamination Characterization Under Cross-Bridge Domain Shift",
+  "audit_completed_timestamp": "2026-10-20T12:38:00+05:30",
+  "repository": "https://github.com/An8akki/crack-length",
+  "branch": "depth-estimation-integration",
+  "git_commit": "ed508ddc",
+  "hardware_system": "13th Gen Intel Core i7-13650HX (14 cores, 20 threads) | Windows 11 AMD64",
+  "python_environment": "Python 3.12.0 | PyTorch 2.8.0+cpu",
+  "phase_summary": {
+    "Phase 0 (Repository Recovery & Inventory)": "completed",
+    "Phase 1 (Environment & Data Validation)": "completed",
+    "Phase 2 (Source-Only Baseline Benchmark)": "fold_1_completed_folds_2_to_5_pending_dataset",
+    "Phase 3 (Deep CORAL Module Implementation)": "completed_tested",
+    "Phase 4 (Leakage & Data Isolation Testing)": "completed_tested",
+    "Phase 5 (Deep CORAL Execution)": "pending_dataset",
+    "Phase 6 (Controls & Ablations)": "pending_dataset",
+    "Phase 7 (Statistical Power Analysis)": "completed",
+    "Phase 8 (Failure & Visual Analysis)": "completed",
+    "Phase 9 (Literature Review & Scholarly Citations)": "completed",
+    "Phase 10 (Reproducibility & Final Audit)": "completed",
+    "Phase 11 (Final Research Report)": "completed",
+    "Phase 12 (Final Git Delivery)": "in_progress"
+  },
+  "runs": {
+    "total_expected": 15,
+    "completed_and_verified": 3,
+    "incomplete_restart_required": 1,
+    "incomplete_resumable": 0,
+    "missing": 11,
+    "failed": 0,
+    "unknown": 0
+  },
+  "tests_status": {
+    "test_deep_coral": "7_of_7_passed",
+    "test_lobo_splits": "4_of_4_passed",
+    "test_data_isolation": "5_of_5_passed",
+    "resume_experiment_status_audit": "passed"
+  }
+}

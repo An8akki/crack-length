@@ -1,0 +1,40 @@
+=== Hardware and Environment Configuration (New System) ===
+OS: Windows 11 Home Single Language (Version: 10.0.26100)
+Machine Architecture: AMD64
+Processor: 13th Gen Intel(R) Core(TM) i7-13650HX (14 Cores: 6 P-Cores, 8 E-Cores, 20 Logical Processors)
+Total RAM: 15.71 GB
+Available RAM: ~9.8 GB
+Dedicated Hardware GPU: NVIDIA GeForce RTX 3050 6GB Laptop GPU (Driver Version: 581.86, System CUDA Support: 13.0)
+Integrated GPU: Intel(R) UHD Graphics
+
+=== Python and PyTorch Environment ===
+Virtual Environment: C:\Project\ml_pipeline\crack-length\venv
+Python Version: 3.12.0 (tags/v3.12.0:0fb18b0, Oct  2 2023, 13:03:39) [MSC v.1935 64 bit (AMD64)]
+PyTorch Version: 2.8.0+cpu
+Torchvision Version: 0.23.0+cpu
+CUDA Available in PyTorch: False (CPU build pinned to match baseline reproducibility protocol)
+Execution Device: CPU (Intel MKL/OpenMP backend)
+Torch Default Threads: 14 (System detected 20 logical threads)
+
+=== Installed Package Versions ===
+numpy: 2.2.6
+pandas: 2.3.2
+pillow: 11.3.0
+scipy: 1.16.1
+scikit-learn: 1.7.2
+scikit-image: 0.25.2
+tqdm: 4.67.1
+
+=== Comparison with Previous System ===
+Old System OS: Windows 11 (10.0.26200) -> New System OS: Windows 11 (10.0.26100)
+Old System CPU: Intel 11th Gen (8 logical cores) -> New System CPU: Intel 13th Gen i7-13650HX (14 physical cores, 20 logical threads)
+Old System RAM: 15.40 GB -> New System RAM: 15.71 GB
+Old System PyTorch: 2.8.0+cpu -> New System PyTorch: 2.8.0+cpu (Identical)
+Old System CUDA: False -> New System CUDA: False in PyTorch (Dedicated RTX 3050 hardware exists, but CPU baseline preserved)
+Old System Python: 3.12.10 -> New System Python: 3.12.0
+
+=== Reproducibility and Determinism Policy ===
+Deterministic Seeds Configured: Python random, NumPy random, PyTorch manual_seed.
+Seeds Evaluated: [42, 123, 999] across 5 LOBO folds (15 total runs).
+Deterministic Algorithms Flag: torch.use_deterministic_algorithms(False) on CPU
+Note: To strictly preserve protocol integrity, baseline runs are maintained on CPU without silently altering model execution device or precision.

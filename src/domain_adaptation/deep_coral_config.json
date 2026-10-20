@@ -1,0 +1,36 @@
+{
+  "method": "Deep CORAL Domain Adaptation",
+  "reference": "Sun & Saenko (ECCV 2016)",
+  "hypothesis": "Second-order covariance alignment between labeled source thermograms and unlabeled target thermograms reduces cross-bridge feature distribution discrepancy and improves delamination segmentation on held-out bridges.",
+  "architecture": {
+    "model": "DeepCORALUNet",
+    "in_channels": 1,
+    "num_classes": 3,
+    "features": [8, 16, 32, 64],
+    "total_parameters": 486427,
+    "feature_layer_aligned": "bottleneck",
+    "feature_channels": 128,
+    "spatial_pooling": "flatten_spatial_pixels (N = B * H * W)"
+  },
+  "loss_formulation": {
+    "total_loss": "L_seg(source) + lambda_coral * L_CORAL(source, target)",
+    "segmentation_loss": "CrossEntropyLoss(ignore_index=255)",
+    "coral_loss": "(1 / (4 * d^2)) * ||C_s - C_t||_F^2",
+    "lambda_coral": 0.5
+  },
+  "optimization": {
+    "optimizer": "AdamW",
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size_source": 8,
+    "batch_size_target": 8,
+    "max_epochs": 100,
+    "patience": 12
+  },
+  "safeguards": {
+    "target_masks_used": false,
+    "target_branch_modality": "unlabeled_infrared_thermogram_only",
+    "model_selection": "source_validation_macro_delam_f1_only",
+    "target_evaluation": "offline_post_freeze_only"
+  }
+}

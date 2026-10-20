@@ -1,0 +1,34 @@
+{
+  "dataset_title": "SDNET2021 Infrared Thermography Delamination Benchmark",
+  "audit_timestamp": "2026-10-20T12:31:00+05:30",
+  "strategy": "Strategy C (256x256, stride 128, end-anchored)",
+  "total_expected_patches": 322,
+  "label_mapping": {
+    "0": "sound_concrete",
+    "1": "class_2_delamination_above_rebar",
+    "2": "class_3_delamination_below_rebar",
+    "255": "excluded_canvas_text_boundary"
+  },
+  "bridges": [
+    {"id": "B1", "name": "Forest River NB", "width": 461, "height": 1942, "patches": 45, "status": "manifest_verified"},
+    {"id": "B2", "name": "Forest River SB", "width": 1626, "height": 401, "patches": 36, "status": "manifest_verified"},
+    {"id": "B3", "name": "Park River Median", "width": 4326, "height": 411, "patches": 99, "status": "manifest_verified"},
+    {"id": "B4", "name": "Park River NB", "width": 2991, "height": 371, "patches": 46, "status": "manifest_verified_unshifted"},
+    {"id": "B5", "name": "Park River SB", "width": 451, "height": 4174, "patches": 96, "status": "manifest_verified"}
+  ],
+  "folds": [
+    {"fold_id": "fold_1", "target": "B1", "val": "B2", "train": ["B3", "B4", "B5"], "status": "runs_1_to_3_completed_verified"},
+    {"fold_id": "fold_2", "target": "B2", "val": "B3", "train": ["B1", "B4", "B5"], "status": "runs_4_to_6_pending_restart"},
+    {"fold_id": "fold_3", "target": "B3", "val": "B4", "train": ["B1", "B2", "B5"], "status": "runs_7_to_9_pending"},
+    {"fold_id": "fold_4", "target": "B4", "val": "B5", "train": ["B1", "B2", "B3"], "status": "runs_10_to_12_pending"},
+    {"fold_id": "fold_5", "target": "B5", "val": "B1", "train": ["B2", "B3", "B4"], "status": "runs_13_to_15_pending"}
+  ],
+  "sealed_target_eval_status": {
+    "fold_1": "present_and_verified",
+    "fold_2": "present_and_verified",
+    "fold_3": "present_and_verified",
+    "fold_4": "present_and_verified",
+    "fold_5": "present_and_verified"
+  },
+  "raw_irt_status": "missing_local_copy_required_in_extracted_irt"
+}

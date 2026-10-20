@@ -1,0 +1,168 @@
+{
+  "project_title": "AI-Based Concrete Delamination Characterization Under Cross-Bridge Domain Shift",
+  "repository": "https://github.com/An8akki/crack-length",
+  "branch": "depth-estimation-integration",
+  "audit_timestamp": "2026-10-20T12:30:00+05:30",
+  "total_expected_runs": 15,
+  "completed_verified": 3,
+  "incomplete_restart_required": 1,
+  "incomplete_resumable": 0,
+  "missing": 11,
+  "failed": 0,
+  "unknown": 0,
+  "runs": [
+    {
+      "run_id": "fold_1_seed42",
+      "fold_id": "fold_1",
+      "seed": 42,
+      "target_bridge": "B1",
+      "status": "completed_verified",
+      "best_epoch": 2,
+      "total_epochs": 14,
+      "val_macro_delam_f1": 0.09396461459983355,
+      "target_macro_delam_f1": 0.0284,
+      "target_defect_recall": 0.1135,
+      "checkpoint_sha256": "5bf64696b6f112156a60d2ba50a2967add1ab8b5ed561af791c954717789918c",
+      "checkpoint_verified": true,
+      "prediction_map_verified": true,
+      "access_log_verified": true
+    },
+    {
+      "run_id": "fold_1_seed123",
+      "fold_id": "fold_1",
+      "seed": 123,
+      "target_bridge": "B1",
+      "status": "completed_verified",
+      "best_epoch": 17,
+      "total_epochs": 29,
+      "val_macro_delam_f1": 0.10597009936636634,
+      "target_macro_delam_f1": 0.1114,
+      "target_defect_recall": 0.3475,
+      "checkpoint_sha256": "8a45c7daf3687fd0fc9e377d89b06826dcdacafb160c099195dfd47b594d4413",
+      "checkpoint_verified": true,
+      "prediction_map_verified": true,
+      "access_log_verified": true
+    },
+    {
+      "run_id": "fold_1_seed999",
+      "fold_id": "fold_1",
+      "seed": 999,
+      "target_bridge": "B1",
+      "status": "completed_verified",
+      "best_epoch": 1,
+      "total_epochs": 13,
+      "val_macro_delam_f1": 0.20367068620685622,
+      "target_macro_delam_f1": 0.1445,
+      "target_defect_recall": 0.5319,
+      "checkpoint_sha256": "025bbe4221adb3325f622b86cd8539442330d392b4becd99b42e79c3041ff8d5",
+      "checkpoint_verified": true,
+      "prediction_map_verified": true,
+      "access_log_verified": true
+    },
+    {
+      "run_id": "fold_2_seed42",
+      "fold_id": "fold_2",
+      "seed": 42,
+      "target_bridge": "B2",
+      "status": "incomplete_restart_required",
+      "best_epoch": null,
+      "total_epochs": null,
+      "val_macro_delam_f1": null,
+      "target_macro_delam_f1": null,
+      "target_defect_recall": null,
+      "checkpoint_sha256": null,
+      "checkpoint_verified": false,
+      "prediction_map_verified": false,
+      "access_log_verified": false,
+      "notes": "Halted at epoch 15 on old system; checkpoints are saved only upon run completion so no corrupt file was created. Restarts from epoch 1."
+    },
+    {
+      "run_id": "fold_2_seed123",
+      "fold_id": "fold_2",
+      "seed": 123,
+      "target_bridge": "B2",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_2_seed999",
+      "fold_id": "fold_2",
+      "seed": 999,
+      "target_bridge": "B2",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_3_seed42",
+      "fold_id": "fold_3",
+      "seed": 42,
+      "target_bridge": "B3",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_3_seed123",
+      "fold_id": "fold_3",
+      "seed": 123,
+      "target_bridge": "B3",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_3_seed999",
+      "fold_id": "fold_3",
+      "seed": 999,
+      "target_bridge": "B3",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_4_seed42",
+      "fold_id": "fold_4",
+      "seed": 42,
+      "target_bridge": "B4",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_4_seed123",
+      "fold_id": "fold_4",
+      "seed": 123,
+      "target_bridge": "B4",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_4_seed999",
+      "fold_id": "fold_4",
+      "seed": 999,
+      "target_bridge": "B4",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_5_seed42",
+      "fold_id": "fold_5",
+      "seed": 42,
+      "target_bridge": "B5",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_5_seed123",
+      "fold_id": "fold_5",
+      "seed": 123,
+      "target_bridge": "B5",
+      "status": "missing",
+      "checkpoint_verified": false
+    },
+    {
+      "run_id": "fold_5_seed999",
+      "fold_id": "fold_5",
+      "seed": 999,
+      "target_bridge": "B5",
+      "status": "missing",
+      "checkpoint_verified": false
+    }
+  ]
+}
