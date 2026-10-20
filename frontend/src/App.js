@@ -52,13 +52,6 @@ function AppContent() {
       description: 'Physical length, opening width, 3D volume & ACI severity'
     },
     {
-      id: '3d-depth',
-      label: '3D Depth Estimation',
-      Icon: Box,
-      Component: CrackQuantification,
-      description: 'ExtraTrees ML crevice depth (ΔZ), conformal intervals & recess map'
-    },
-    {
       id: '3d-heightmap',
       label: '3D Heightmap',
       Icon: Box,
@@ -66,6 +59,7 @@ function AppContent() {
       description: 'Convert 2D images to 3D heightmaps'
     }
   ];
+
 
   const [failedLogos, setFailedLogos] = useState({});
 
