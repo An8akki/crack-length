@@ -45,9 +45,12 @@ COPY templates /app/templates
 # Copy frontend application and compiled production build for unified single-container serving
 COPY frontend /app/frontend
 
+# Copy lightweight model weights into container for instant zero-download startup within 512MB RAM
+COPY runs/detect/train/weights /app/runs/detect/train/weights
+COPY segmentation_model/weights /app/segmentation_model/weights
+
 # Create directory structure for models and runtime outputs
-RUN mkdir -p /app/runs/detect/train/weights /app/runs/detect/train3/weights && \
-    mkdir -p /app/segmentation_model/weights && \
+RUN mkdir -p /app/runs/detect/train3/weights && \
     mkdir -p /app/materialclassification_model && \
     mkdir -p /app/uploads /app/outputs && \
     mkdir -p /app/__pycache__

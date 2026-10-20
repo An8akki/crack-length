@@ -120,7 +120,10 @@ def get_yolo_model():
     global yolo_model
     if yolo_model is None and YOLO is not None:
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        yolo_path = os.path.join(script_dir, "runs/detect/train3/weights/best.pt")
+        # Prefer lightweight Nano model (5.6MB) for low-memory 512MB environments
+        nano_path = os.path.join(script_dir, "runs/detect/train/weights/best.pt")
+        large_path = os.path.join(script_dir, "runs/detect/train3/weights/best.pt")
+        yolo_path = nano_path if os.path.exists(nano_path) else large_path
         if os.path.exists(yolo_path):
             try:
                 yolo_model = YOLO(yolo_path)

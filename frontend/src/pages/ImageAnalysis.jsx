@@ -94,7 +94,14 @@ const ImageAnalysis = () => {
       clearInterval(progressInterval);
       
       if (!response.ok) {
-        throw new Error('Analysis failed');
+        let errorDetails = `Server returned HTTP ${response.status} (${response.statusText || 'Error'})`;
+        try {
+          const errData = await response.json();
+          if (errData && errData.error) {
+            errorDetails = errData.error;
+          }
+        } catch (_) {}
+        throw new Error(errorDetails);
       }
 
       const data = await response.json();
@@ -105,7 +112,8 @@ const ImageAnalysis = () => {
       setLoading(false);
     } catch (err) {
       console.error('Analysis error:', err);
-      setError(`Analysis failed. Make sure the backend is running and accessible at ${API_URL}`);
+      const message = err.message || 'Unknown network error';
+      setError(`Analysis failed: ${message}. If using free tier, allow 15s for container memory to stabilize.`);
       setLoading(false);
       setProgress(0);
     }

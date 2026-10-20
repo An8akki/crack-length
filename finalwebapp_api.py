@@ -637,7 +637,10 @@ def get_api_yolo_model():
     """Lazily load YOLO crack detection model if weights are available on disk"""
     global YOLO_MODEL
     if YOLO_MODEL is None and YOLO is not None:
-        yolo_path = os.path.abspath("runs/detect/train3/weights/best.pt")
+        # Prefer lightweight Nano model (5.6MB) to keep container memory within 512MB
+        nano_path = os.path.abspath("runs/detect/train/weights/best.pt")
+        large_path = os.path.abspath("runs/detect/train3/weights/best.pt")
+        yolo_path = nano_path if os.path.exists(nano_path) else large_path
         if os.path.exists(yolo_path):
             try:
                 YOLO_MODEL = YOLO(yolo_path)
@@ -709,9 +712,9 @@ def create_environmental_impact_graphs(carbon_footprint, water_footprint, materi
         else:
             plt.style.use('default')
         
-        # Create a comprehensive figure with 2x2 subplots
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(16, 12))
-        fig.suptitle('Comprehensive Environmental Impact Assessment', fontsize=20, fontweight='bold', y=0.98)
+        # Create a comprehensive figure with 2x2 subplots (compact figsize for cloud memory efficiency)
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 8))
+        fig.suptitle('Comprehensive Environmental Impact Assessment', fontsize=16, fontweight='bold', y=0.98)
         
         # Chart 1: Carbon Footprint Comparison
         categories = ['Current Site', 'Industry Average', 'Best Practice Target', 'Regulatory Limit']
@@ -837,39 +840,39 @@ def create_environmental_impact_graphs(carbon_footprint, water_footprint, materi
         for i, (ax, name) in enumerate([(ax1, 'carbon_comparison'), (ax2, 'environmental_breakdown'), 
                                         (ax3, 'sustainability_radar'), (ax4, 'projection_timeline')]):
             # Create individual figure for each chart
-            individual_fig = plt.figure(figsize=(10, 8))
+            individual_fig = plt.figure(figsize=(6, 4))
             
             if name == 'carbon_comparison':
                 ax_new = individual_fig.add_subplot(111)
                 bars = ax_new.bar(categories, carbon_values, color=colors1, alpha=0.8, edgecolor='black', linewidth=1.2)
-                ax_new.set_title('Carbon Footprint Comparison Analysis', fontsize=16, fontweight='bold', pad=20)
-                ax_new.set_ylabel('Carbon Emissions (kg CO₂e)', fontsize=14, fontweight='bold')
-                ax_new.set_xlabel('Comparison Categories', fontsize=14, fontweight='bold')
+                ax_new.set_title('Carbon Footprint Comparison Analysis', fontsize=12, fontweight='bold', pad=15)
+                ax_new.set_ylabel('Carbon Emissions (kg CO₂e)', fontsize=10, fontweight='bold')
+                ax_new.set_xlabel('Comparison Categories', fontsize=10, fontweight='bold')
                 for bar, value in zip(bars, carbon_values):
                     height = bar.get_height()
                     ax_new.text(bar.get_x() + bar.get_width()/2., height + max(carbon_values) * 0.01,
-                               f'{value:.1f}', ha='center', va='bottom', fontweight='bold', fontsize=12)
+                               f'{value:.1f}', ha='center', va='bottom', fontweight='bold', fontsize=9)
                 ax_new.axhline(y=carbon_footprint, color='red', linestyle='--', alpha=0.7, linewidth=2, label='Current Level')
-                ax_new.legend(fontsize=12)
+                ax_new.legend(fontsize=9)
                 ax_new.grid(True, alpha=0.3, axis='y')
             
-            # Convert to base64
+            # Convert to base64 with web-friendly 100 DPI
             buffer = io.BytesIO()
-            individual_fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight', facecolor='white')
+            individual_fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', facecolor='white')
             buffer.seek(0)
             chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
             charts[f'{name}_chart'] = f'data:image/png;base64,{chart_base64}'
             buffer.close()
             plt.close(individual_fig)
         
-        # Save the main comprehensive chart
+        # Save the main comprehensive chart with web-friendly 100 DPI
         main_buffer = io.BytesIO()
-        fig.savefig(main_buffer, format='png', dpi=300, bbox_inches='tight', facecolor='white')
+        fig.savefig(main_buffer, format='png', dpi=100, bbox_inches='tight', facecolor='white')
         main_buffer.seek(0)
         main_chart_base64 = base64.b64encode(main_buffer.getvalue()).decode('utf-8')
         charts['comprehensive_environmental_analysis'] = f'data:image/png;base64,{main_chart_base64}'
         main_buffer.close()
-        plt.close(fig)
+        plt.close('all')
         
         return charts
         
@@ -1085,9 +1088,9 @@ def create_data_science_inference_graphs(analysis_results):
         # Set up plotting
         plt.style.use('seaborn-v0_8' if 'seaborn-v0_8' in plt.style.available else 'default')
         
-        # Create comprehensive data science figure
-        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(18, 14))
-        fig.suptitle('Heritage Site Data Science Analysis with Statistical Inference', fontsize=20, fontweight='bold', y=0.98)
+        # Create comprehensive data science figure (compact figsize for cloud memory efficiency)
+        fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2, figsize=(10, 8))
+        fig.suptitle('Heritage Site Data Science Analysis with Statistical Inference', fontsize=15, fontweight='bold', y=0.98)
         
         # Chart 1: Crack Severity Distribution with Confidence Intervals
         crack_details = analysis_results.get('crack_detection', {}).get('details', [])
@@ -1252,12 +1255,13 @@ def create_data_science_inference_graphs(analysis_results):
         
         plt.tight_layout()
         
-        # Save to base64
+        # Save to base64 with web-friendly 100 DPI
         buffer = io.BytesIO()
-        fig.savefig(buffer, format='png', dpi=300, bbox_inches='tight', facecolor='white')
+        fig.savefig(buffer, format='png', dpi=100, bbox_inches='tight', facecolor='white')
         buffer.seek(0)
         chart_base64 = base64.b64encode(buffer.getvalue()).decode('utf-8')
-        plt.close(fig)
+        buffer.close()
+        plt.close('all')
         
         return f'data:image/png;base64,{chart_base64}'
         
@@ -1577,6 +1581,21 @@ def analyze():
             return jsonify({"error": "Failed to decode image"}), 400
         
         print(f"✅ Image decoded successfully: shape {image_np.shape}")
+
+        # Proportional downscaling for large images (>1024px) to protect 512MB memory boundary
+        max_dim = max(image_np.shape[:2])
+        if max_dim > 1024:
+            scale_factor = 1024.0 / max_dim
+            new_w = int(image_np.shape[1] * scale_factor)
+            new_h = int(image_np.shape[0] * scale_factor)
+            if cv2 is not None:
+                image_np = cv2.resize(image_np, (new_w, new_h), interpolation=cv2.INTER_AREA)
+            else:
+                from PIL import Image as PILImage
+                pil_temp = PILImage.fromarray(image_np)
+                pil_temp = pil_temp.resize((new_w, new_h), PILImage.Resampling.BILINEAR)
+                image_np = np.array(pil_temp)
+            print(f"📉 Resized image to {image_np.shape} for memory safety in 512MB container")
 
         # Preserve the original file bytes so EXIF can be inspected for the
         # optional 1x camera-scale estimate. OpenCV decoding discards EXIF.

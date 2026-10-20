@@ -64,6 +64,13 @@ def download_models_from_hf():
         Path(dest_dir).mkdir(parents=True, exist_ok=True)
         dest_path = os.path.join(dest_dir, dest_filename)
         
+        # Skip heavy crack detection download if the lightweight Nano model exists
+        if model_type == 'crack_detection' and os.path.exists('runs/detect/train/weights/best.pt'):
+            size_mb = os.path.getsize('runs/detect/train/weights/best.pt') / (1024 * 1024)
+            print(f"✅ Using bundled lightweight YOLO defect model runs/detect/train/weights/best.pt ({size_mb:.1f}MB)")
+            models_loaded += 1
+            continue
+
         # Check if already exists
         if os.path.exists(dest_path):
             size_mb = os.path.getsize(dest_path) / (1024 * 1024)
