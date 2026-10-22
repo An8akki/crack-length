@@ -1,0 +1,61 @@
+{
+  "run_id": "coral_fold_3_seed42",
+  "fold_id": "fold_3",
+  "seed": 42,
+  "target_bridge": "B3",
+  "val_bridge": "B4",
+  "train_bridges": [
+    "B1",
+    "B2",
+    "B5"
+  ],
+  "best_epoch": 21,
+  "total_epochs": 33,
+  "best_val_macro_delam_f1": 0.18801846685219703,
+  "best_val_metrics": {
+    "class0_precision": 0.8198598586057806,
+    "class0_recall": 0.7769013108304458,
+    "class0_f1": 0.7978027159477895,
+    "class0_iou": 0.6636204610766209,
+    "class0_gt_pixels": 2291143,
+    "class1_precision": 0.31723534578922974,
+    "class1_recall": 0.46159684274438373,
+    "class1_f1": 0.37603693370439406,
+    "class1_iou": 0.23155510215030037,
+    "class1_gt_pixels": 579744,
+    "class2_precision": 0.0,
+    "class2_recall": 0.0,
+    "class2_f1": 0.0,
+    "class2_iou": 0.0,
+    "class2_gt_pixels": 143769,
+    "val_macro_delam_f1": 0.18801846685219703,
+    "val_macro_delam_iou": 0.11577755107515018,
+    "comb_delam_precision": 0.39405711250967623,
+    "comb_delam_recall": 0.4594416409933201,
+    "comb_delam_f1": 0.4242448994177691,
+    "comb_delam_iou": 0.26923276292173415
+  },
+  "normalization": {
+    "mean": 0.613940417766571,
+    "std": 0.2052411139011383
+  },
+  "features": [
+    8,
+    16,
+    32,
+    64
+  ],
+  "hyperparameters": {
+    "lr": 0.001,
+    "weight_decay": 0.0001,
+    "batch_size": 8,
+    "max_epochs": 100,
+    "patience": 12,
+    "lambda_coral": 0.5,
+    "feature_layer": "bottleneck"
+  },
+  "checkpoint_file": "coral_fold_3_seed42_best_checkpoint.pt",
+  "checkpoint_sha256": "6f11ac202531f2f63747dfcf5db655b6b7caec1db91671d01573846dfdb60ed7",
+  "frozen": true,
+  "training_duration_sec": 169.97
+}

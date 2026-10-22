@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-10-20 15:01:48",
+  "pytorch_version": "2.6.0+cu124",
+  "cuda_available": true,
+  "cuda_version": "12.4",
+  "device_count": 1,
+  "device_name": "NVIDIA GeForce RTX 3050 6GB Laptop GPU",
+  "tests": {
+    "model_on_cuda": true,
+    "tensors_on_cuda": true,
+    "forward_backward_on_cuda": true,
+    "total_loss_value": 1.15715754032135,
+    "seg_loss_value": 1.1571438312530518,
+    "coral_loss_value": 2.7431713533587754e-05
+  },
+  "vram_usage": {
+    "allocated_mb": 225.77,
+    "reserved_mb": 752.0,
+    "peak_mb": 711.18
+  },
+  "benchmark": {
+    "steps": 10,
+    "batch_size_source": 8,
+    "batch_size_target": 8,
+    "cpu_duration_sec": 4.956,
+    "cpu_per_step_sec": 0.4956,
+    "gpu_duration_sec": 0.641,
+    "gpu_per_step_sec": 0.0641,
+    "speedup_factor": 7.73
+  }
+}

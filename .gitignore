@@ -29,6 +29,7 @@ render.env
 
 # ==================== PYTHON VIRTUAL ENVIRONMENTS ====================
 venv/
+venv_cuda/
 ENV/
 env/
 .venv

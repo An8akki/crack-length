@@ -1,6 +1,6 @@
 bridge_id,bridge_name,status,baseline_seed42_delam_f1,baseline_seed123_delam_f1,baseline_seed999_delam_f1,baseline_mean_delam_f1,baseline_std_delam_f1,coral_mean_delam_f1,coral_std_delam_f1,delta_macro_f1,delta_class2_f1,delta_class3_f1,practical_threshold_met_ge_005
-B1,Forest River NB,baseline_completed_coral_pending,0.0284,0.1114,0.1445,0.0948,0.0598,PENDING,PENDING,PENDING,PENDING,PENDING,PENDING
-B2,Forest River SB,baseline_completed_coral_pending,0.0666,0.17,0.1835,0.14,0.064,PENDING,PENDING,PENDING,PENDING,PENDING,PENDING
-B3,Park River Median,baseline_completed_coral_pending,0.091,0.0,0.1924,0.0945,0.0962,PENDING,PENDING,PENDING,PENDING,PENDING,PENDING
-B4,Park River NB,baseline_completed_coral_pending,0.1244,0.1288,0.1693,0.1408,0.0248,PENDING,PENDING,PENDING,PENDING,PENDING,PENDING
-B5,Park River SB,baseline_completed_coral_pending,0.1297,0.1462,0.1484,0.1414,0.0102,PENDING,PENDING,PENDING,PENDING,PENDING,PENDING
+B1,Forest River NB,completed,0.0284,0.1114,0.1445,0.0948,0.0598,0.1265,0.0106,0.0317,0.0593,0.0043,False
+B2,Forest River SB,completed,0.0666,0.17,0.1835,0.14,0.064,0.1163,0.0253,-0.0237,-0.0494,0.0018,False
+B3,Park River Median,completed,0.091,0.0,0.1924,0.0945,0.0962,0.1035,0.0795,0.009,0.0179,0.0,False
+B4,Park River NB,completed,0.1244,0.1288,0.1693,0.1408,0.0248,0.1167,0.0568,-0.0241,-0.0366,-0.0117,False
+B5,Park River SB,completed,0.1297,0.1462,0.1484,0.1414,0.0102,0.1095,0.0382,-0.0319,-0.064,0.0002,False
