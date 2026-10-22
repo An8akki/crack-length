@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: infravision-ai
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: FLASK_APP
+        value: finalwebapp_api.py

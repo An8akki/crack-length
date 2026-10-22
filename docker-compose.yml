@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  infravision-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: infravision-ai
+    ports:
+      - "7860:7860"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_APP=finalwebapp_api.py
+      - PORT=7860
+    volumes:
+      - ./uploads:/app/uploads
+      - ./outputs:/app/outputs
+    restart: unless-stopped
